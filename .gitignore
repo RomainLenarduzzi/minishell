@@ -24,3 +24,9 @@ obj/
 # Test files
 test_output/
 *.test
+
+# Exclude downloads and subject files
+*.pdf
+minishell-main/
+tester/
+*.zip
