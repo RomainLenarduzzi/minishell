@@ -1,0 +1,26 @@
+# Compiled files
+*.o
+*.a
+*.so
+minishell
+
+# Editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Debug files
+*.dSYM/
+vgcore.*
+*.log
+
+# Build directories
+build/
+obj/
+
+# Test files
+test_output/
+*.test
