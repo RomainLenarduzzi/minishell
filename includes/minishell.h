@@ -101,13 +101,15 @@ void	process_heredocs(t_data *data);
 void	cleanup_heredocs(t_data *data);
 
 /* Builtins */
-int		builtin_echo(char **args);
+int		builtin_echo(char **args, int fd_out);
 int		builtin_cd(char **args, t_data *data);
-int		builtin_pwd(void);
+int		builtin_pwd(int fd_out);
 int		builtin_export(char **args, t_data *data);
 int		builtin_unset(char **args, t_data *data);
-int		builtin_env(t_data *data);
+int		builtin_env(t_data *data, int fd_out);
 int		builtin_exit(char **args, t_data *data);
+
+int		resolve_redirections(t_cmd *cmd, int *fd_in, int *fd_out);
 
 /* Environment */
 char	*get_env_value(t_env *env, char *key);
@@ -130,6 +132,7 @@ char	*ft_strjoin(char *s1, char *s2);
 void	ft_putstr_fd(char *s, int fd);
 int		ft_strlen(char *str);
 int		ft_strcmp(char *s1, char *s2);
+int		ft_atoi(char *str);
 char	*ft_itoa(int n);
 char	*ft_substr(char const *s, unsigned int start, size_t len);
 char	*expand_token(char *str, t_data *data);

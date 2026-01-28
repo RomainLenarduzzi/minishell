@@ -19,13 +19,15 @@ void	cleanup_data(t_data *data)
 		free_cmds(data->cmds);
 	if (data->env)
 		free_env(data->env);
+	rl_clear_history();
 }
 
 void	process_input(char *input, t_data *data)
 {
 	if (!input || input[0] == '\0')
 		return ;
-	add_history(input);
+	if (isatty(STDIN_FILENO))
+		add_history(input);
 	data->tokens = tokenize(input);
 	if (!data->tokens)
 		return ;

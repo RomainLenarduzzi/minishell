@@ -17,7 +17,7 @@ static char	*get_var_value(char *var_name, t_data *data)
 
 static int	is_var_char(char c)
 {
-	return (isalnum(c) || c == '_' || c == '?');
+	return (isalnum(c) || c == '_');
 }
 
 // Advances i past the variable name

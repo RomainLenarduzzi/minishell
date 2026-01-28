@@ -16,7 +16,7 @@ static int	is_n_flag(char *str)
 	return (i > 1);
 }
 
-int	builtin_echo(char **args)
+int	builtin_echo(char **args, int fd_out)
 {
 	int	i;
 	int	print_newline;
@@ -30,12 +30,12 @@ int	builtin_echo(char **args)
 	}
 	while (args[i])
 	{
-		printf("%s", args[i]);
+		ft_putstr_fd(args[i], fd_out);
 		if (args[i + 1])
-			printf(" ");
+			ft_putstr_fd(" ", fd_out);
 		i++;
 	}
 	if (print_newline)
-		printf("\n");
+		ft_putstr_fd("\n", fd_out);
 	return (0);
 }

@@ -6,38 +6,30 @@
 static int	exec_builtin_cmd(t_cmd *cmd, t_data *data)
 {
 	int	ret;
-	int	stdin_backup;
-	int	stdout_backup;
+	int	fd_in;
+	int	fd_out;
 
-	stdin_backup = dup(STDIN_FILENO);
-	stdout_backup = dup(STDOUT_FILENO);
-	if (handle_redirections(cmd) != 0)
-	{
-		dup2(stdin_backup, STDIN_FILENO);
-		dup2(stdout_backup, STDOUT_FILENO);
-		close(stdin_backup);
-		close(stdout_backup);
+	if (resolve_redirections(cmd, &fd_in, &fd_out) != 0)
 		return (1);
-	}
 	ret = 0;
 	if (ft_strcmp(cmd->args[0], "echo") == 0)
-		ret = builtin_echo(cmd->args);
+		ret = builtin_echo(cmd->args, fd_out);
 	else if (ft_strcmp(cmd->args[0], "cd") == 0)
 		ret = builtin_cd(cmd->args, data);
 	else if (ft_strcmp(cmd->args[0], "pwd") == 0)
-		ret = builtin_pwd();
+		ret = builtin_pwd(fd_out);
 	else if (ft_strcmp(cmd->args[0], "export") == 0)
 		ret = builtin_export(cmd->args, data);
 	else if (ft_strcmp(cmd->args[0], "unset") == 0)
 		ret = builtin_unset(cmd->args, data);
 	else if (ft_strcmp(cmd->args[0], "env") == 0)
-		ret = builtin_env(data);
+		ret = builtin_env(data, fd_out);
 	else if (ft_strcmp(cmd->args[0], "exit") == 0)
 		ret = builtin_exit(cmd->args, data);
-	dup2(stdin_backup, STDIN_FILENO);
-	dup2(stdout_backup, STDOUT_FILENO);
-	close(stdin_backup);
-	close(stdout_backup);
+	if (fd_in != STDIN_FILENO)
+		close(fd_in);
+	if (fd_out != STDOUT_FILENO)
+		close(fd_out);
 	return (ret);
 }
 
