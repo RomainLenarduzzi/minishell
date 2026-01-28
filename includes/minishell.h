@@ -42,15 +42,7 @@ typedef struct s_token
 }	t_token;
 
 /* Command structure */
-typedef struct s_cmd
-{
-	char			**args;
-	char			*infile;
-	char			*outfile;
-	int				append;
-	char			*heredoc_delim;
-	struct s_cmd	*next;
-}	t_cmd;
+
 
 /* Environment variable structure */
 typedef struct s_env
@@ -59,6 +51,22 @@ typedef struct s_env
 	char			*value;
 	struct s_env	*next;
 }	t_env;
+
+/* Redirection structure */
+typedef struct s_redir
+{
+	t_token_type	type;
+	char			*filename; /* filename or heredoc delimiter */
+	struct s_redir	*next;
+}	t_redir;
+
+/* Command structure */
+typedef struct s_cmd
+{
+	char			**args;
+	t_redir			*redirs;
+	struct s_cmd	*next;
+}	t_cmd;
 
 /* Main data structure */
 typedef struct s_data
@@ -79,6 +87,10 @@ t_token	*tokenize(char *input);
 t_cmd	*parse_tokens(t_token *tokens, t_data *data);
 void	free_tokens(t_token *tokens);
 void	free_cmds(t_cmd *cmds);
+
+/* Redirections */
+int		handle_redirections(t_cmd *cmd);
+void	handle_redirection(t_cmd *cmd, t_token **tokens, t_data *data);
 
 /* Execution */
 void	execute_command(t_data *data);

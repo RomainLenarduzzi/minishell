@@ -12,14 +12,14 @@ static char	*get_filename(void)
 	return (name);
 }
 
-int	handle_heredoc(t_cmd *cmd)
+int	handle_heredoc(t_redir *redir)
 {
 	char	*line;
 	char	*filename;
 	int		fd;
+	char	*delim;
 
-	if (!cmd->heredoc_delim)
-		return (0);
+	delim = redir->filename;
 	filename = get_filename();
 	fd = open(filename, O_WRONLY | O_CREAT | O_TRUNC, 0644);
 	if (fd < 0)
@@ -33,7 +33,7 @@ int	handle_heredoc(t_cmd *cmd)
 		line = readline("> ");
 		if (!line)
 			break ;
-		if (ft_strcmp(line, cmd->heredoc_delim) == 0)
+		if (ft_strcmp(line, delim) == 0)
 		{
 			free(line);
 			break ;
@@ -43,19 +43,26 @@ int	handle_heredoc(t_cmd *cmd)
 		free(line);
 	}
 	close(fd);
-	cmd->infile = filename;
+	free(delim); // Free the delimiter as we replace it
+	redir->filename = filename;
 	return (0);
 }
 
 void	process_heredocs(t_data *data)
 {
 	t_cmd	*cmd;
+	t_redir	*redir;
 
 	cmd = data->cmds;
 	while (cmd)
 	{
-		if (cmd->heredoc_delim)
-			handle_heredoc(cmd);
+		redir = cmd->redirs;
+		while (redir)
+		{
+			if (redir->type == TOKEN_REDIR_HEREDOC)
+				handle_heredoc(redir);
+			redir = redir->next;
+		}
 		cmd = cmd->next;
 	}
 }
@@ -63,13 +70,19 @@ void	process_heredocs(t_data *data)
 void	cleanup_heredocs(t_data *data)
 {
 	t_cmd	*cmd;
+	t_redir	*redir;
 
 	cmd = data->cmds;
 	while (cmd)
 	{
-		if (cmd->heredoc_delim && cmd->infile)
+		redir = cmd->redirs;
+		while (redir)
 		{
-			unlink(cmd->infile);
+			if (redir->type == TOKEN_REDIR_HEREDOC && redir->filename)
+			{
+				unlink(redir->filename);
+			}
+			redir = redir->next;
 		}
 		cmd = cmd->next;
 	}

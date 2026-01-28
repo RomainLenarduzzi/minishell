@@ -25,6 +25,8 @@ SRCS = srcs/main.c \
 		srcs/execution/builtin_check.c \
 		srcs/execution/path.c \
 		srcs/execution/heredoc.c \
+		srcs/redirections/redirections.c \
+		srcs/redirections/redirections_parsing.c \
 		srcs/builtins/echo.c \
 		srcs/builtins/cd.c \
 		srcs/builtins/pwd.c \

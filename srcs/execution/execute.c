@@ -1,10 +1,24 @@
 
 #include "../../includes/minishell.h"
 
+
+
 static int	exec_builtin_cmd(t_cmd *cmd, t_data *data)
 {
 	int	ret;
+	int	stdin_backup;
+	int	stdout_backup;
 
+	stdin_backup = dup(STDIN_FILENO);
+	stdout_backup = dup(STDOUT_FILENO);
+	if (handle_redirections(cmd) != 0)
+	{
+		dup2(stdin_backup, STDIN_FILENO);
+		dup2(stdout_backup, STDOUT_FILENO);
+		close(stdin_backup);
+		close(stdout_backup);
+		return (1);
+	}
 	ret = 0;
 	if (ft_strcmp(cmd->args[0], "echo") == 0)
 		ret = builtin_echo(cmd->args);
@@ -20,6 +34,10 @@ static int	exec_builtin_cmd(t_cmd *cmd, t_data *data)
 		ret = builtin_env(data);
 	else if (ft_strcmp(cmd->args[0], "exit") == 0)
 		ret = builtin_exit(cmd->args, data);
+	dup2(stdin_backup, STDIN_FILENO);
+	dup2(stdout_backup, STDOUT_FILENO);
+	close(stdin_backup);
+	close(stdout_backup);
 	return (ret);
 }
 
@@ -30,36 +48,7 @@ void	handle_exec_error(char *cmd)
 	ft_putstr_fd(": command not found\n", 2);
 }
 
-static void	handle_redirections(t_cmd *cmd)
-{
-	int	fd;
 
-	if (cmd->infile)
-	{
-		fd = open(cmd->infile, O_RDONLY);
-		if (fd < 0)
-		{
-			perror(cmd->infile);
-			exit(1);
-		}
-		dup2(fd, STDIN_FILENO);
-		close(fd);
-	}
-	if (cmd->outfile)
-	{
-		if (cmd->append)
-			fd = open(cmd->outfile, O_WRONLY | O_CREAT | O_APPEND, 0644);
-		else
-			fd = open(cmd->outfile, O_WRONLY | O_CREAT | O_TRUNC, 0644);
-		if (fd < 0)
-		{
-			perror(cmd->outfile);
-			exit(1);
-		}
-		dup2(fd, STDOUT_FILENO);
-		close(fd);
-	}
-}
 
 void	exec_child(t_cmd *cmd, t_data *data, int prev_fd, int pipe_fd[2])
 {
@@ -76,7 +65,8 @@ void	exec_child(t_cmd *cmd, t_data *data, int prev_fd, int pipe_fd[2])
 		close(pipe_fd[1]);
 		close(pipe_fd[0]);
 	}
-	handle_redirections(cmd);
+	if (handle_redirections(cmd) != 0)
+		exit(1);
 	if (is_builtin(cmd->args[0]))
 		exit(exec_builtin_cmd(cmd, data));
 	path = get_cmd_path(cmd->args[0], data->envp);

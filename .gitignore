@@ -30,3 +30,4 @@ test_output/
 minishell-main/
 tester/
 *.zip
+42_minishell_tester/

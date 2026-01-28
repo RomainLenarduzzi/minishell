@@ -39,16 +39,59 @@ void	process_input(char *input, t_data *data)
 	data->cmds = NULL;
 }
 
+static char	*get_line(void)
+{
+	char	*line;
+	char	*tmp;
+	char	buf[2];
+	int		ret;
+
+	line = NULL;
+	buf[1] = '\0';
+	while (1)
+	{
+		ret = read(STDIN_FILENO, buf, 1);
+		if (ret <= 0)
+			break ;
+		if (!line)
+			line = ft_strdup(buf);
+		else
+		{
+			tmp = line;
+			line = ft_strjoin(line, buf);
+			free(tmp);
+		}
+		if (buf[0] == '\n')
+			break ;
+	}
+	return (line);
+}
+
 void	shell_loop(t_data *data)
 {
 	char	*input;
 
 	while (1)
 	{
-		input = readline("minishell$ ");
+		if (isatty(STDIN_FILENO))
+			input = readline("minishell$ ");
+		else
+		{
+			char *line = get_line();
+			if (line)
+			{
+				int len = ft_strlen(line);
+				if (len > 0 && line[len - 1] == '\n')
+					line[len - 1] = '\0';
+				input = line;
+			}
+			else
+				input = NULL;
+		}
 		if (!input)
 		{
-			printf("exit\n");
+			if (isatty(STDIN_FILENO))
+				printf("exit\n");
 			break ;
 		}
 		process_input(input, data);
