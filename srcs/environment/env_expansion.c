@@ -59,8 +59,7 @@ char	*expand_token(char *str, t_data *data)
 	char	*tmp;
 	char	quote;
 	int		i;
-    // We need to build the result string char by char (or chunk by chunk)
-    // Initial result empty
+
 	res = ft_strdup("");
 	i = 0;
 	quote = 0;
