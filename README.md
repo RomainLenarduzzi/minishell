@@ -142,7 +142,7 @@ This project follows the 42 Norm:
 ## Authors
 
 - RomainLenarduzzi
-- Your teammate
+- MarwaneElhour
 
 ## Resources
 
