@@ -18,10 +18,13 @@ LDFLAGS = -lreadline
 
 # Source files
 SRCS = srcs/main.c \
+		srcs/main_utils.c \
 		srcs/parsing/tokenizer.c \
+		srcs/parsing/tokenizer_utils.c \
 		srcs/parsing/parser.c \
 		srcs/parsing/free_parsing.c \
 		srcs/execution/execute.c \
+		srcs/execution/execute_utils.c \
 		srcs/execution/builtin_check.c \
 		srcs/execution/path.c \
 		srcs/execution/heredoc.c \
@@ -42,7 +45,8 @@ SRCS = srcs/main.c \
 		srcs/utils/string_utils.c \
 		srcs/utils/array_utils.c \
 		srcs/utils/ft_strdup.c \
-		srcs/utils/ft_strjoin.c
+		srcs/utils/ft_strjoin.c \
+		srcs/utils/string_split.c
 
 OBJS = $(SRCS:.c=.o)
 

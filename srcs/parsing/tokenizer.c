@@ -1,97 +1,69 @@
 #include "../../includes/minishell.h"
 
-static t_token	*create_token(t_token_type type, char *value)
+static void	skip_quotes(char *input, int *i)
 {
-	t_token	*token;
+	char	quote;
 
-	token = malloc(sizeof(t_token));
-	if (!token)
-		return (NULL);
-	token->type = type;
-	token->value = value;
-	token->next = NULL;
-	return (token);
-}
-
-static void	add_token(t_token **tokens, t_token *new_token)
-{
-	t_token	*tmp;
-
-	if (!*tokens)
-	{
-		*tokens = new_token;
-		return ;
-	}
-	tmp = *tokens;
-	while (tmp->next)
-		tmp = tmp->next;
-	tmp->next = new_token;
-}
-
-static int	is_separator(char c)
-{
-	return (c == ' ' || c == '\t' || c == '|' || c == '<' || c == '>');
+	quote = input[*i];
+	(*i)++;
+	while (input[*i] && input[*i] != quote)
+		(*i)++;
+	if (input[*i])
+		(*i)++;
 }
 
 static char	*extract_word(char *input, int *i)
 {
 	int		start;
 	int		len;
-	char	*word;
-	char	quote;
 
 	start = *i;
 	while (input[*i] && !is_separator(input[*i]))
 	{
 		if (input[*i] == '\'' || input[*i] == '\"')
-		{
-			quote = input[*i];
-			(*i)++;
-			while (input[*i] && input[*i] != quote)
-				(*i)++;
-			if (input[*i])
-				(*i)++;
-		}
+			skip_quotes(input, i);
 		else
 			(*i)++;
 	}
 	len = *i - start;
-	word = malloc(sizeof(char) * (len + 1));
-	if (!word)
-		return (NULL);
-	len = 0;
-	while (start < *i)
-		word[len++] = input[start++];
-	word[len] = '\0';
-	return (word);
+	return (ft_substr(input, start, len));
+}
+
+static int	handle_redir(char *input, int *i, char **val, t_token_type *type)
+{
+	if (input[*i] == '<')
+	{
+		if (input[*i + 1] == '<')
+		{
+			*val = ft_strdup("<<");
+			*type = TOKEN_REDIR_HEREDOC;
+			(*i) += 2;
+		}
+		else
+		{
+			*val = ft_strdup("<");
+			*type = TOKEN_REDIR_IN;
+			(*i)++;
+		}
+		return (1);
+	}
+	return (0);
 }
 
 static void	handle_separator(t_token **tokens, char *input, int *i)
 {
-	char	*val;
-	t_token_type type;
+	char			*val;
+	t_token_type	type;
 
+	val = NULL;
 	if (input[*i] == '|')
 	{
 		val = ft_strdup("|");
 		type = TOKEN_PIPE;
 		(*i)++;
 	}
-	else if (input[*i] == '<')
-	{
-		if (input[*i + 1] == '<')
-		{
-			val = ft_strdup("<<");
-			type = TOKEN_REDIR_HEREDOC;
-			(*i) += 2;
-		}
-		else
-		{
-			val = ft_strdup("<");
-			type = TOKEN_REDIR_IN;
-			(*i)++;
-		}
-	}
+	else if (handle_redir(input, i, &val, &type))
+		;
 	else if (input[*i] == '>')
 	{
 		if (input[*i + 1] == '>')
@@ -107,15 +79,8 @@ static void	handle_separator(t_token **tokens, char *input, int *i)
 			(*i)++;
 		}
 	}
-	else
-		return ;
-	add_token(tokens, create_token(type, val));
-}
-
-static void	skip_whitespace(char *input, int *i)
-{
-	while (input[*i] && (input[*i] == ' ' || input[*i] == '\t'))
-		(*i)++;
+	if (val)
+		add_token(tokens, create_token(type, val));
 }
 
 t_token	*tokenize(char *input)
@@ -131,13 +96,15 @@ t_token	*tokenize(char *input)
 		skip_whitespace(input, &i);
 		if (!input[i])
 			break ;
-		if (input[i] == '|' || input[i] == '<' || input[i] == '>')
+		if (is_separator(input[i]) && input[i] != ' ' && input[i] != '\t')
 			handle_separator(&tokens, input, &i);
 		else
 		{
 			word = extract_word(input, &i);
 			if (word && word[0])
 				add_token(&tokens, create_token(TOKEN_WORD, word));
+			else if (word)
+				free(word);
 		}
 	}
 	return (tokens);

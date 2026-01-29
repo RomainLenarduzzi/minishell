@@ -1,62 +1,12 @@
 
 #include "../../includes/minishell.h"
 
-
-
-static int	exec_builtin_cmd(t_cmd *cmd, t_data *data)
-{
-	int	ret;
-	int	fd_in;
-	int	fd_out;
-
-	if (resolve_redirections(cmd, &fd_in, &fd_out) != 0)
-		return (1);
-	ret = 0;
-	if (ft_strcmp(cmd->args[0], "echo") == 0)
-		ret = builtin_echo(cmd->args, fd_out);
-	else if (ft_strcmp(cmd->args[0], "cd") == 0)
-		ret = builtin_cd(cmd->args, data);
-	else if (ft_strcmp(cmd->args[0], "pwd") == 0)
-		ret = builtin_pwd(fd_out);
-	else if (ft_strcmp(cmd->args[0], "export") == 0)
-		ret = builtin_export(cmd->args, data);
-	else if (ft_strcmp(cmd->args[0], "unset") == 0)
-		ret = builtin_unset(cmd->args, data);
-	else if (ft_strcmp(cmd->args[0], "env") == 0)
-		ret = builtin_env(data, fd_out);
-	else if (ft_strcmp(cmd->args[0], "exit") == 0)
-		ret = builtin_exit(cmd->args, data);
-	if (fd_in != STDIN_FILENO)
-		close(fd_in);
-	if (fd_out != STDOUT_FILENO)
-		close(fd_out);
-	return (ret);
-}
-
-void	handle_exec_error(char *cmd)
-{
-	ft_putstr_fd("minishell: ", 2);
-	ft_putstr_fd(cmd, 2);
-	ft_putstr_fd(": command not found\n", 2);
-}
-
-
-
 void	exec_child(t_cmd *cmd, t_data *data, int prev_fd, int pipe_fd[2])
 {
-	char	*path;
+	char		*path;
+	struct stat	sb;
 
-	if (prev_fd != -1)
-	{
-		dup2(prev_fd, STDIN_FILENO);
-		close(prev_fd);
-	}
-	if (cmd->next)
-	{
-		dup2(pipe_fd[1], STDOUT_FILENO);
-		close(pipe_fd[1]);
-		close(pipe_fd[0]);
-	}
+	dup_child_fds(prev_fd, pipe_fd, (cmd->next != NULL));
 	if (handle_redirections(cmd) != 0)
 		exit(1);
 	if (is_builtin(cmd->args[0]))
@@ -64,12 +14,19 @@ void	exec_child(t_cmd *cmd, t_data *data, int prev_fd, int pipe_fd[2])
 	path = get_cmd_path(cmd->args[0], data->envp);
 	if (!path)
 	{
-		handle_exec_error(cmd->args[0]);
+		if (strchr(cmd->args[0], '/'))
+			print_exec_error(cmd->args[0], "No such file or directory");
+		else
+			print_exec_error(cmd->args[0], "command not found");
 		exit(127);
 	}
 	if (execve(path, cmd->args, data->envp) == -1)
 	{
-		perror("execve");
+		if (stat(path, &sb) == 0 && S_ISDIR(sb.st_mode))
+			print_exec_error(cmd->args[0], "Is a directory");
+		else
+			print_exec_error(cmd->args[0], strerror(errno));
+		free(path);
 		exit(126);
 	}
 }
@@ -80,8 +37,6 @@ void	run_pipeline(t_data *data)
 	int		pipe_fd[2];
 	int		prev_fd;
 	pid_t	pid;
-	int		status;
-
 	cmd = data->cmds;
 	prev_fd = -1;
 	while (cmd)
@@ -100,11 +55,8 @@ void	run_pipeline(t_data *data)
 		}
 		cmd = cmd->next;
 	}
-	waitpid(pid, &status, 0); // Wait for last command specifically
-	if (WIFEXITED(status))
-		data->exit_status = WEXITSTATUS(status);
-	while (wait(NULL) > 0)
-		;
+	wait_all_children(pid, data);
+
 }
 
 void	execute_command(t_data *data)
@@ -122,8 +74,5 @@ void	execute_command(t_data *data)
 	cleanup_heredocs(data);
 }
 
-int	execute_builtin(t_cmd *cmd, t_data *data)
-{
-	return (exec_builtin_cmd(cmd, data));
-}
+
 

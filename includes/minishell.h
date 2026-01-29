@@ -97,6 +97,11 @@ void	execute_command(t_data *data);
 int		execute_builtin(t_cmd *cmd, t_data *data);
 int		is_builtin(char *cmd);
 char	*get_cmd_path(char *cmd, char **envp);
+/* Main Utils */
+void	init_data(t_data *data, char **envp);
+void	cleanup_data(t_data *data);
+void	process_input(char *input, t_data *data);
+
 void	process_heredocs(t_data *data);
 void	cleanup_heredocs(t_data *data);
 
@@ -136,5 +141,19 @@ int		ft_atoi(char *str);
 char	*ft_itoa(int n);
 char	*ft_substr(char const *s, unsigned int start, size_t len);
 char	*expand_token(char *str, t_data *data);
+
+char	*expand_token(char *str, t_data *data);
+
+/* Tokenizer Utils */
+t_token	*create_token(t_token_type type, char *value);
+void	add_token(t_token **tokens, t_token *new_token);
+int		is_separator(char c);
+void	skip_whitespace(char *input, int *i);
+
+/* Execution Utils */
+void	print_exec_error(char *cmd, char *msg);
+int		exec_builtin_cmd(t_cmd *cmd, t_data *data);
+void	dup_child_fds(int prev_fd, int pipe_fd[2], int has_next);
+void	wait_all_children(pid_t last_pid, t_data *data);
 
 #endif
