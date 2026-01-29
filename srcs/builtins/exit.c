@@ -22,8 +22,7 @@ int	builtin_exit(char **args, t_data *data)
 {
 	int	exit_code;
 
-	if (isatty(STDIN_FILENO))
-		printf("exit\n");
+	printf("exit\n");
 	if (args[1])
 	{
 		if (!is_str_num(args[1]))
