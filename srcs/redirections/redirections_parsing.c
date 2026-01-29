@@ -1,34 +1,40 @@
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   redirections_parsing.c                             :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: romlenar <romlenar@student.42.fr>          +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2026/01/29 22:07:51 by romlenar          #+#    #+#             */
+/*   Updated: 2026/01/29 22:07:52 by romlenar         ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
+
 #include "../../includes/minishell.h"
 
 static char	*strip_quotes(char *str)
 {
-	char	*new_str;
+	char	*new;
 	int		i;
 	int		j;
-	char	quote;
+	char	q;
 
-	if (!str)
-		return (NULL);
-	new_str = malloc(sizeof(char) * (ft_strlen(str) + 1));
-	if (!new_str)
-		return (NULL);
 	i = 0;
 	j = 0;
+	q = 0;
+	new = malloc(ft_strlen(str) + 1);
+	if (!new)
+		return (NULL);
 	while (str[i])
 	{
-		if (str[i] == '\'' || str[i] == '\"')
-		{
-			quote = str[i++];
-			while (str[i] && str[i] != quote)
-				new_str[j++] = str[i++];
-			if (str[i])
-				i++;
-		}
+		if (!q && (str[i] == '\'' || str[i] == '\"'))
+			q = str[i++];
+		else if (str[i] == q && ++i)
+			q = 0;
 		else
-			new_str[j++] = str[i++];
+			new[j++] = str[i++];
 	}
-	new_str[j] = '\0';
-	return (new_str);
+	return (new[j] = '\0', new);
 }
 
 static void	add_redir(t_cmd *cmd, t_redir *new_redir)

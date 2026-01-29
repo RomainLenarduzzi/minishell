@@ -1,3 +1,15 @@
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   path.c                                             :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: romlenar <romlenar@student.42.fr>          +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2026/01/29 21:59:45 by romlenar          #+#    #+#             */
+/*   Updated: 2026/01/29 21:59:46 by romlenar         ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
+
 #include "../../includes/minishell.h"
 
 char	*find_path_in_env(char **envp)
@@ -17,30 +29,25 @@ char	*find_path_in_env(char **envp)
 char	*get_cmd_path(char *cmd, char **envp)
 {
 	char	**paths;
-	char	*path_env;
-	char	*part_path;
-	char	*full_path;
+	char	*full;
+	char	*tmp;
 	int		i;
 
-	if (access(cmd, F_OK) == 0)
+	if (cmd && ft_strchr(cmd, '/') && access(cmd, F_OK) == 0)
 		return (ft_strdup(cmd));
-	path_env = find_path_in_env(envp);
-	if (!path_env)
+	tmp = find_path_in_env(envp);
+	if (!tmp || !cmd || !cmd[0])
 		return (NULL);
-	paths = split_string(path_env, ':');
-	i = 0;
-	while (paths[i])
+	paths = split_string(tmp, ':');
+	i = -1;
+	while (paths && paths[++i])
 	{
-		part_path = ft_strjoin(paths[i], "/");
-		full_path = ft_strjoin(part_path, cmd);
-		free(part_path);
-		if (access(full_path, F_OK) == 0)
-		{
-			free_array(paths);
-			return (full_path);
-		}
-		free(full_path);
-		i++;
+		tmp = ft_strjoin(paths[i], "/");
+		full = ft_strjoin(tmp, cmd);
+		free(tmp);
+		if (access(full, F_OK) == 0)
+			return (free_array(paths), full);
+		free(full);
 	}
 	free_array(paths);
 	return (NULL);

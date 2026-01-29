@@ -1,34 +1,51 @@
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   execute.c                                          :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: romlenar <romlenar@student.42.fr>          +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2026/01/29 21:59:38 by romlenar          #+#    #+#             */
+/*   Updated: 2026/01/29 21:59:39 by romlenar         ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
 
 #include "../../includes/minishell.h"
 
+static void	handle_exec_fail(char *path, char *cmd)
+{
+	struct stat	sb;
+
+	if (stat(path, &sb) == 0 && S_ISDIR(sb.st_mode))
+		print_exec_error(cmd, "Is a directory");
+	else
+		print_exec_error(cmd, strerror(errno));
+	free(path);
+	exit(126);
+}
+
 void	exec_child(t_cmd *cmd, t_data *data, int prev_fd, int pipe_fd[2])
 {
-	char		*path;
-	struct stat	sb;
+	char	*path;
 
 	dup_child_fds(prev_fd, pipe_fd, (cmd->next != NULL));
 	if (handle_redirections(cmd) != 0)
 		exit(1);
-	if (is_builtin(cmd->args[0]))
+	if (cmd->args && cmd->args[0] && is_builtin(cmd->args[0]))
 		exit(exec_builtin_cmd(cmd, data));
+	if (!cmd->args || !cmd->args[0])
+		exit(0);
 	path = get_cmd_path(cmd->args[0], data->envp);
 	if (!path)
 	{
-		if (strchr(cmd->args[0], '/'))
+		if (ft_strchr(cmd->args[0], '/'))
 			print_exec_error(cmd->args[0], "No such file or directory");
 		else
 			print_exec_error(cmd->args[0], "command not found");
 		exit(127);
 	}
-	if (execve(path, cmd->args, data->envp) == -1)
-	{
-		if (stat(path, &sb) == 0 && S_ISDIR(sb.st_mode))
-			print_exec_error(cmd->args[0], "Is a directory");
-		else
-			print_exec_error(cmd->args[0], strerror(errno));
-		free(path);
-		exit(126);
-	}
+	execve(path, cmd->args, data->envp);
+	handle_exec_fail(path, cmd->args[0]);
 }
 
 void	run_pipeline(t_data *data)
@@ -37,6 +54,7 @@ void	run_pipeline(t_data *data)
 	int		pipe_fd[2];
 	int		prev_fd;
 	pid_t	pid;
+
 	cmd = data->cmds;
 	prev_fd = -1;
 	while (cmd)
@@ -56,7 +74,6 @@ void	run_pipeline(t_data *data)
 		cmd = cmd->next;
 	}
 	wait_all_children(pid, data);
-
 }
 
 void	execute_command(t_data *data)
@@ -73,6 +90,3 @@ void	execute_command(t_data *data)
 	}
 	cleanup_heredocs(data);
 }
-
-
-

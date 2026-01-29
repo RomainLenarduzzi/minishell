@@ -1,16 +1,27 @@
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   parser.c                                           :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: romlenar <romlenar@student.42.fr>          +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2026/01/29 22:00:05 by romlenar          #+#    #+#             */
+/*   Updated: 2026/01/29 22:13:14 by romlenar         ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
+
 #include "../../includes/minishell.h"
 
-
-
-static int	count_args_no_redir(t_token *tokens)
+static int	count_args_no_redir(t_token *tokens, t_data *data)
 {
-	int	count;
+	int		count;
+	char	*tmp;
 
 	count = 0;
 	while (tokens && tokens->type != TOKEN_PIPE)
 	{
-		if (tokens->type == TOKEN_REDIR_IN || tokens->type == TOKEN_REDIR_OUT
-			|| tokens->type == TOKEN_REDIR_APPEND || tokens->type == TOKEN_REDIR_HEREDOC)
+		if (tokens->type >= TOKEN_REDIR_IN
+			&& tokens->type <= TOKEN_REDIR_HEREDOC)
 		{
 			tokens = tokens->next;
 			if (tokens)
@@ -18,70 +29,66 @@ static int	count_args_no_redir(t_token *tokens)
 		}
 		else
 		{
-			count++;
+			tmp = expand_token(tokens->value, data);
+			(tmp && tmp[0] != '\0' && count++);
+			free(tmp);
 			tokens = tokens->next;
 		}
 	}
 	return (count);
 }
 
-static char	**get_cmd_args(t_cmd *cmd, t_token **tokens, t_data *data)
+static char	**get_cmd_args(t_cmd *cmd, t_token **toks, t_data *data)
 {
 	char	**args;
-	int		count;
+	char	*exp;
 	int		i;
 
-	count = count_args_no_redir(*tokens);
-	args = malloc(sizeof(char *) * (count + 1));
+	args = malloc(sizeof(char *) * (count_args_no_redir(*toks, data) + 1));
 	if (!args)
 		return (NULL);
 	i = 0;
-	while (*tokens && (*tokens)->type != TOKEN_PIPE)
+	while (*toks && (*toks)->type != TOKEN_PIPE)
 	{
-		if ((*tokens)->type == TOKEN_REDIR_IN || (*tokens)->type == TOKEN_REDIR_OUT
-			|| (*tokens)->type == TOKEN_REDIR_APPEND || (*tokens)->type == TOKEN_REDIR_HEREDOC)
-		{
-			handle_redirection(cmd, tokens, data);
-		}
+		if ((*toks)->type >= TOKEN_REDIR_IN
+			&& (*toks)->type <= TOKEN_REDIR_HEREDOC)
+			handle_redirection(cmd, toks, data);
 		else
 		{
-			args[i] = expand_token((*tokens)->value, data);
-			*tokens = (*tokens)->next;
-			i++;
+			exp = expand_token((*toks)->value, data);
+			if (exp && exp[0] != '\0')
+				args[i++] = exp;
+			else
+				free(exp);
+			*toks = (*toks)->next;
 		}
 	}
 	args[i] = NULL;
-	if (*tokens && (*tokens)->type == TOKEN_PIPE)
-		*tokens = (*tokens)->next;
 	return (args);
 }
 
-t_cmd	*parse_tokens(t_token *tokens, t_data *data)
+t_cmd	*parse_tokens(t_token *toks, t_data *data)
 {
 	t_cmd	*head;
 	t_cmd	*curr;
 
-	if (!tokens)
+	if (!toks)
 		return (NULL);
-	head = NULL;
-	curr = NULL;
-	while (tokens)
+	head = malloc(sizeof(t_cmd));
+	if (!head)
+		return (NULL);
+	curr = head;
+	while (curr)
 	{
-		if (!head)
-		{
-			head = malloc(sizeof(t_cmd));
-			curr = head;
-		}
-		else
-		{
-			curr->next = malloc(sizeof(t_cmd));
-			curr = curr->next;
-		}
-		if (!curr)
-			return (NULL);
 		curr->redirs = NULL;
 		curr->next = NULL;
-		curr->args = get_cmd_args(curr, &tokens, data);
+		curr->args = get_cmd_args(curr, &toks, data);
+		if (toks && toks->type == TOKEN_PIPE)
+			toks = toks->next;
+		if (!toks)
+			break ;
+		curr->next = malloc(sizeof(t_cmd));
+		curr = curr->next;
 	}
 	return (head);
 }

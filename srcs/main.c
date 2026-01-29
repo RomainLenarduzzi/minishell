@@ -1,7 +1,18 @@
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   main.c                                             :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: romlenar <romlenar@student.42.fr>          +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2026/01/29 22:10:01 by romlenar          #+#    #+#             */
+/*   Updated: 2026/01/29 22:10:02 by romlenar         ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
+
 #include "../includes/minishell.h"
 
-int	g_signal = 0;
-
+int			g_signal = 0;
 
 static char	*get_line(void)
 {
@@ -23,12 +34,29 @@ static char	*get_line(void)
 		{
 			tmp = line;
 			line = ft_strjoin(line, buf);
-			free(tmp);
+			(free(tmp), (void)0);
 		}
 		if (buf[0] == '\n')
 			break ;
 	}
 	return (line);
+}
+
+static char	*get_next_input(void)
+{
+	char	*input;
+	int		len;
+
+	if (isatty(STDIN_FILENO))
+		return (readline("minishell$ "));
+	input = get_line();
+	if (input)
+	{
+		len = ft_strlen(input);
+		if (len > 0 && input[len - 1] == '\n')
+			input[len - 1] = '\0';
+	}
+	return (input);
 }
 
 void	shell_loop(t_data *data)
@@ -37,28 +65,18 @@ void	shell_loop(t_data *data)
 
 	while (1)
 	{
-		if (isatty(STDIN_FILENO))
-			input = readline("minishell$ ");
-		else
-		{
-			char *line = get_line();
-			if (line)
-			{
-				int len = ft_strlen(line);
-				if (len > 0 && line[len - 1] == '\n')
-					line[len - 1] = '\0';
-				input = line;
-			}
-			else
-				input = NULL;
-		}
+		input = get_next_input();
 		if (!input)
 		{
 			if (isatty(STDIN_FILENO))
-				printf("exit\n");
+				ft_putstr_fd("exit\n", 1);
 			break ;
 		}
-		process_input(input, data);
+		if (input[0])
+		{
+			add_history(input);
+			process_input(input, data);
+		}
 		free(input);
 	}
 }

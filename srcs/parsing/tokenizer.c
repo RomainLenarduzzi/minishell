@@ -1,53 +1,60 @@
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   tokenizer.c                                        :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: romlenar <romlenar@student.42.fr>          +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2026/01/29 22:00:11 by romlenar          #+#    #+#             */
+/*   Updated: 2026/01/29 22:07:35 by romlenar         ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
+
 #include "../../includes/minishell.h"
-
-static void	skip_quotes(char *input, int *i)
-{
-	char	quote;
-
-	quote = input[*i];
-	(*i)++;
-	while (input[*i] && input[*i] != quote)
-		(*i)++;
-	if (input[*i])
-		(*i)++;
-}
 
 static char	*extract_word(char *input, int *i)
 {
 	int		start;
-	int		len;
+	char	quote;
 
 	start = *i;
 	while (input[*i] && !is_separator(input[*i]))
 	{
 		if (input[*i] == '\'' || input[*i] == '\"')
-			skip_quotes(input, i);
+		{
+			quote = input[(*i)++];
+			while (input[*i] && input[*i] != quote)
+				(*i)++;
+			if (input[*i])
+				(*i)++;
+		}
 		else
 			(*i)++;
 	}
-	len = *i - start;
-	return (ft_substr(input, start, len));
+	return (ft_substr(input, start, *i - start));
 }
 
-static int	handle_redir(char *input, int *i, char **val, t_token_type *type)
+static void	assign_redir(char **v, t_token_type *t, char *s, t_token_type type)
 {
-	if (input[*i] == '<')
-	{
-		if (input[*i + 1] == '<')
-		{
-			*val = ft_strdup("<<");
-			*type = TOKEN_REDIR_HEREDOC;
-			(*i) += 2;
-		}
-		else
-		{
-			*val = ft_strdup("<");
-			*type = TOKEN_REDIR_IN;
-			(*i)++;
-		}
-		return (1);
-	}
-	return (0);
+	*v = ft_strdup(s);
+	*t = type;
+}
+
+static int	handle_redir(char *in, int *i, char **v, t_token_type *t)
+{
+	if (in[*i] == '<' && in[*i + 1] == '<')
+		assign_redir(v, t, "<<", TOKEN_REDIR_HEREDOC);
+	else if (in[*i] == '<')
+		assign_redir(v, t, "<", TOKEN_REDIR_IN);
+	else if (in[*i] == '>' && in[*i + 1] == '>')
+		assign_redir(v, t, ">>", TOKEN_REDIR_APPEND);
+	else if (in[*i] == '>')
+		assign_redir(v, t, ">", TOKEN_REDIR_OUT);
+	else
+		return (0);
+	if (*v)
+		*i += ft_strlen(*v);
+	return (1);
 }
 
 static void	handle_separator(t_token **tokens, char *input, int *i)
@@ -62,23 +69,8 @@ static void	handle_separator(t_token **tokens, char *input, int *i)
 		type = TOKEN_PIPE;
 		(*i)++;
 	}
-	else if (handle_redir(input, i, &val, &type))
-		;
-	else if (input[*i] == '>')
-	{
-		if (input[*i + 1] == '>')
-		{
-			val = ft_strdup(">>");
-			type = TOKEN_REDIR_APPEND;
-			(*i) += 2;
-		}
-		else
-		{
-			val = ft_strdup(">");
-			type = TOKEN_REDIR_OUT;
-			(*i)++;
-		}
-	}
+	else
+		handle_redir(input, i, &val, &type);
 	if (val)
 		add_token(tokens, create_token(type, val));
 }

@@ -3,10 +3,10 @@
 #                                                         :::      ::::::::    #
 #    Makefile                                           :+:      :+:    :+:    #
 #                                                     +:+ +:+         +:+      #
-#    By: shell <shell@student.42.fr>                +#+  +:+       +#+         #
+#    By: romlenar <romlenar@student.42.fr>          +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2026/01/27 18:41:00 by shell             #+#    #+#              #
-#    Updated: 2026/01/27 18:41:00 by shell            ###   ########.fr        #
+#    Updated: 2026/01/29 21:42:16 by romlenar         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -44,6 +44,7 @@ SRCS = srcs/main.c \
 		srcs/signals/signals.c \
 		srcs/utils/string_utils.c \
 		srcs/utils/array_utils.c \
+		srcs/utils/ft_strchr.c \
 		srcs/utils/ft_strdup.c \
 		srcs/utils/ft_strjoin.c \
 		srcs/utils/string_split.c

@@ -1,3 +1,15 @@
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   execute_utils.c                                    :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: romlenar <romlenar@student.42.fr>          +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2026/01/29 21:59:35 by romlenar          #+#    #+#             */
+/*   Updated: 2026/01/29 21:59:36 by romlenar         ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
+
 #include "../../includes/minishell.h"
 
 void	print_exec_error(char *cmd, char *msg)
@@ -38,29 +50,28 @@ void	wait_all_children(pid_t last_pid, t_data *data)
 int	exec_builtin_cmd(t_cmd *cmd, t_data *data)
 {
 	int	ret;
-	int	fd_in;
-	int	fd_out;
+	int	f[2];
 
-	if (resolve_redirections(cmd, &fd_in, &fd_out) != 0)
+	if (resolve_redirections(cmd, &f[0], &f[1]) != 0)
 		return (1);
 	ret = 0;
 	if (ft_strcmp(cmd->args[0], "echo") == 0)
-		ret = builtin_echo(cmd->args, fd_out);
+		ret = builtin_echo(cmd->args, f[1]);
 	else if (ft_strcmp(cmd->args[0], "cd") == 0)
 		ret = builtin_cd(cmd->args, data);
 	else if (ft_strcmp(cmd->args[0], "pwd") == 0)
-		ret = builtin_pwd(fd_out);
+		ret = builtin_pwd(f[1]);
 	else if (ft_strcmp(cmd->args[0], "export") == 0)
 		ret = builtin_export(cmd->args, data);
 	else if (ft_strcmp(cmd->args[0], "unset") == 0)
 		ret = builtin_unset(cmd->args, data);
 	else if (ft_strcmp(cmd->args[0], "env") == 0)
-		ret = builtin_env(data, fd_out);
+		ret = builtin_env(data, f[1]);
 	else if (ft_strcmp(cmd->args[0], "exit") == 0)
 		ret = builtin_exit(cmd->args, data);
-	if (fd_in != STDIN_FILENO)
-		close(fd_in);
-	if (fd_out != STDOUT_FILENO)
-		close(fd_out);
+	if (f[0] != STDIN_FILENO)
+		close(f[0]);
+	if (f[1] != STDOUT_FILENO)
+		close(f[1]);
 	return (ret);
 }

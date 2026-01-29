@@ -1,39 +1,43 @@
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   redirections.c                                     :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: romlenar <romlenar@student.42.fr>          +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2026/01/29 22:07:54 by romlenar          #+#    #+#             */
+/*   Updated: 2026/01/29 22:08:57 by romlenar         ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
+
 #include "../../includes/minishell.h"
+
+static int	open_redir_file(t_redir *r)
+{
+	if (r->type == TOKEN_REDIR_IN || r->type == TOKEN_REDIR_HEREDOC)
+		return (open(r->filename, O_RDONLY));
+	if (r->type == TOKEN_REDIR_APPEND)
+		return (open(r->filename, O_WRONLY | O_CREAT | O_APPEND, 0644));
+	return (open(r->filename, O_WRONLY | O_CREAT | O_TRUNC, 0644));
+}
 
 int	handle_redirections(t_cmd *cmd)
 {
 	int		fd;
-	t_redir	*redir;
+	t_redir	*r;
 
-	redir = cmd->redirs;
-	while (redir)
+	r = cmd->redirs;
+	while (r)
 	{
-		if (redir->type == TOKEN_REDIR_IN || redir->type == TOKEN_REDIR_HEREDOC)
-		{
-			fd = open(redir->filename, O_RDONLY);
-			if (fd < 0)
-			{
-				perror(redir->filename);
-				return (-1);
-			}
+		fd = open_redir_file(r);
+		if (fd < 0)
+			return (perror(r->filename), -1);
+		if (r->type == TOKEN_REDIR_IN || r->type == TOKEN_REDIR_HEREDOC)
 			dup2(fd, STDIN_FILENO);
-			close(fd);
-		}
-		else if (redir->type == TOKEN_REDIR_OUT || redir->type == TOKEN_REDIR_APPEND)
-		{
-			if (redir->type == TOKEN_REDIR_APPEND)
-				fd = open(redir->filename, O_WRONLY | O_CREAT | O_APPEND, 0644);
-			else
-				fd = open(redir->filename, O_WRONLY | O_CREAT | O_TRUNC, 0644);
-			if (fd < 0)
-			{
-				perror(redir->filename);
-				return (-1);
-			}
+		else
 			dup2(fd, STDOUT_FILENO);
-			close(fd);
-		}
-		redir = redir->next;
+		close(fd);
+		r = r->next;
 	}
 	return (0);
 }
@@ -41,41 +45,27 @@ int	handle_redirections(t_cmd *cmd)
 int	resolve_redirections(t_cmd *cmd, int *fd_in, int *fd_out)
 {
 	int		fd;
-	t_redir	*redir;
+	t_redir	*r;
+	int		*target;
 
-	*fd_in = STDIN_FILENO;
-	*fd_out = STDOUT_FILENO;
-	redir = cmd->redirs;
-	while (redir)
+	*fd_in = 0;
+	*fd_out = 1;
+	r = cmd->redirs;
+	while (r)
 	{
-		if (redir->type == TOKEN_REDIR_IN || redir->type == TOKEN_REDIR_HEREDOC)
+		fd = open_redir_file(r);
+		if (fd < 0)
 		{
-			fd = open(redir->filename, O_RDONLY);
-			if (fd < 0)
-			{
-				perror(redir->filename);
-				return (-1);
-			}
-			if (*fd_in != STDIN_FILENO)
-				close(*fd_in);
-			*fd_in = fd;
+			perror(r->filename);
+			return (-1);
 		}
-		else if (redir->type == TOKEN_REDIR_OUT || redir->type == TOKEN_REDIR_APPEND)
-		{
-			if (redir->type == TOKEN_REDIR_APPEND)
-				fd = open(redir->filename, O_WRONLY | O_CREAT | O_APPEND, 0644);
-			else
-				fd = open(redir->filename, O_WRONLY | O_CREAT | O_TRUNC, 0644);
-			if (fd < 0)
-			{
-				perror(redir->filename);
-				return (-1);
-			}
-			if (*fd_out != STDOUT_FILENO)
-				close(*fd_out);
-			*fd_out = fd;
-		}
-		redir = redir->next;
+		target = fd_out;
+		if (r->type == TOKEN_REDIR_IN || r->type == TOKEN_REDIR_HEREDOC)
+			target = fd_in;
+		if (*target > 1)
+			close(*target);
+		*target = fd;
+		r = r->next;
 	}
 	return (0);
 }

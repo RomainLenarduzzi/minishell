@@ -1,3 +1,15 @@
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   string_utils.c                                     :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: romlenar <romlenar@student.42.fr>          +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2026/01/29 22:09:53 by romlenar          #+#    #+#             */
+/*   Updated: 2026/01/29 22:09:54 by romlenar         ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
+
 #include "../../includes/minishell.h"
 
 int	ft_strlen(char *str)
@@ -19,8 +31,6 @@ int	ft_strcmp(char *s1, char *s2)
 		i++;
 	return (s1[i] - s2[i]);
 }
-
-
 
 char	*ft_substr(char const *s, unsigned int start, size_t len)
 {
@@ -45,8 +55,6 @@ char	*ft_substr(char const *s, unsigned int start, size_t len)
 	str[i] = '\0';
 	return (str);
 }
-
-
 
 void	ft_putstr_fd(char *s, int fd)
 {
