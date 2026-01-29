@@ -6,7 +6,7 @@
 /*   By: romlenar <romlenar@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/29 21:56:43 by romlenar          #+#    #+#             */
-/*   Updated: 2026/01/29 22:17:46 by romlenar         ###   ########.fr       */
+/*   Updated: 2026/01/29 23:41:37 by romlenar         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,10 +14,8 @@
 
 static int	is_var_char(char c)
 {
-	if ((c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || (c >= '0'
-			&& c <= '9') || (c == '_'))
-		return (1);
-	return (0);
+	return ((c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z')
+		|| (c >= '0' && c <= '9') || (c == '_'));
 }
 
 static char	*get_var_value(char *var_name, t_data *data)
@@ -40,6 +38,8 @@ static void	append_char(char **res, char c)
 	s[0] = c;
 	s[1] = '\0';
 	tmp = ft_strjoin(*res, s);
+	if (!tmp)
+		return ;
 	free(*res);
 	*res = tmp;
 }
@@ -60,8 +60,13 @@ static void	append_var_value(char **res, char *str, int *i, t_data *data)
 	name = ft_substr(str, start, *i - start);
 	val = get_var_value(name, data);
 	tmp = ft_strjoin(*res, val);
-	(free(*res), free(val), free(name));
-	*res = tmp;
+	if (tmp)
+	{
+		free(*res);
+		*res = tmp;
+	}
+	free(name);
+	free(val);
 }
 
 char	*expand_token(char *str, t_data *data)
@@ -73,7 +78,7 @@ char	*expand_token(char *str, t_data *data)
 	i = 0;
 	q = 0;
 	res = ft_strdup("");
-	while (str && str[i])
+	while (res && str && str[i])
 	{
 		if ((str[i] == '\'' || str[i] == '\"') && q == 0)
 			q = str[i++];
