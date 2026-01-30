@@ -52,7 +52,7 @@ static void	add_redir(t_cmd *cmd, t_redir *new_redir)
 	tmp->next = new_redir;
 }
 
-void	handle_redirection(t_cmd *cmd, t_token **tokens, t_data *data)
+int	handle_redirection(t_cmd *cmd, t_token **tokens, t_data *data)
 {
 	t_token_type	type;
 	t_redir			*redir;
@@ -60,16 +60,28 @@ void	handle_redirection(t_cmd *cmd, t_token **tokens, t_data *data)
 	type = (*tokens)->type;
 	*tokens = (*tokens)->next;
 	if (!*tokens)
-		return ;
+		return (print_syntax_error("newline"), 1);
+	if ((*tokens)->type != TOKEN_WORD)
+		return (print_syntax_error((*tokens)->value), 1);
 	redir = malloc(sizeof(t_redir));
 	if (!redir)
-		return ;
+		return (1);
 	redir->type = type;
 	redir->next = NULL;
 	if (type == TOKEN_REDIR_HEREDOC)
 		redir->filename = strip_quotes((*tokens)->value);
 	else
 		redir->filename = expand_token((*tokens)->value, data);
+	if (!redir->filename || redir->filename[0] == '\0')
+	{
+		ft_putstr_fd("minishell: ", 2);
+		ft_putstr_fd((*tokens)->value, 2);
+		ft_putstr_fd(": ambiguous redirect\n", 2);
+		free(redir->filename);
+		free(redir);
+		return (1);
+	}
 	add_redir(cmd, redir);
 	*tokens = (*tokens)->next;
+	return (0);
 }

@@ -42,6 +42,10 @@ typedef enum e_token_type
 	TOKEN_REDIR_OUT,
 	TOKEN_REDIR_APPEND,
 	TOKEN_REDIR_HEREDOC,
+	TOKEN_AND,
+	TOKEN_OR,
+	TOKEN_LPAREN,
+	TOKEN_RPAREN,
 	TOKEN_END
 }					t_token_type;
 
@@ -87,6 +91,7 @@ typedef struct s_data
 	t_env			*env;
 	char			**envp;
 	int				exit_status;
+	char			*input_line;
 }					t_data;
 
 /* Main */
@@ -94,15 +99,18 @@ void				init_data(t_data *data, char **envp);
 void				cleanup_data(t_data *data);
 
 /* Parsing */
-t_token				*tokenize(char *input);
+t_token				*tokenize(char *input, int *exit_status);
 t_cmd				*parse_tokens(t_token *tokens, t_data *data);
 void				free_tokens(t_token *tokens);
 void				free_cmds(t_cmd *cmds);
 
 /* Redirections */
 int					handle_redirections(t_cmd *cmd);
-void				handle_redirection(t_cmd *cmd, t_token **tokens,
-						t_data *data);
+/* Redirection Parsing */
+int					handle_redirection(t_cmd *cmd, t_token **tokens, t_data *data);
+
+/* Syntax Error */
+void				print_syntax_error(char *token);
 int					resolve_redirections(t_cmd *cmd, int *fd_in, int *fd_out);
 
 /* Execution */
@@ -137,7 +145,12 @@ t_env				*init_env(char **envp);
 void				free_env(t_env *env);
 
 /* Signals */
-void				setup_signals(void);
+# define BIO_SIG_PROMPT 0
+# define BIO_SIG_EXEC   1
+# define BIO_SIG_WAIT   2
+# define BIO_SIG_HEREDOC 3
+
+void				setup_signals(int mode);
 void				handle_sigint(int sig);
 void				handle_sigquit(int sig);
 
@@ -167,6 +180,7 @@ void				skip_whitespace(char *input, int *i);
 /* Execution Utils */
 void				print_exec_error(char *cmd, char *msg);
 int					exec_builtin_cmd(t_cmd *cmd, t_data *data);
+int					dispatch_builtin_cmd(t_cmd *cmd, t_data *data, int fd_out);
 void				dup_child_fds(int prev_fd, int pipe_fd[2], int has_next);
 void				wait_all_children(pid_t last_pid, t_data *data);
 

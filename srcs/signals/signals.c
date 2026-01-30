@@ -12,6 +12,8 @@
 
 #include "../../includes/minishell.h"
 
+void	handle_heredoc_sigint(int sig);
+
 void	handle_sigint(int sig)
 {
 	g_signal = sig;
@@ -26,8 +28,50 @@ void	handle_sigquit(int sig)
 	(void)sig;
 }
 
-void	setup_signals(void)
+void	handle_heredoc_sigint(int sig)
 {
-	signal(SIGINT, handle_sigint);
-	signal(SIGQUIT, handle_sigquit);
+	(void)sig;
+	write(1, "\n", 1);
+	close(STDIN_FILENO);
+	g_signal = 130;
+}
+
+void	setup_signals(int mode)
+{
+	struct sigaction	sa;
+	char				*ptr;
+	size_t				i;
+
+	ptr = (char *)&sa;
+	i = 0;
+	while (i < sizeof(struct sigaction))
+		ptr[i++] = 0;
+	sigemptyset(&sa.sa_mask);
+	sa.sa_flags = SA_RESTART;
+	if (mode == BIO_SIG_PROMPT)
+	{
+		sa.sa_handler = handle_sigint;
+		sigaction(SIGINT, &sa, NULL);
+		sa.sa_handler = SIG_IGN;
+		sigaction(SIGQUIT, &sa, NULL);
+	}
+	else if (mode == BIO_SIG_EXEC)
+	{
+		sa.sa_handler = SIG_DFL;
+		sigaction(SIGINT, &sa, NULL);
+		sigaction(SIGQUIT, &sa, NULL);
+	}
+	else if (mode == BIO_SIG_WAIT)
+	{
+		sa.sa_handler = SIG_IGN;
+		sigaction(SIGINT, &sa, NULL);
+		sigaction(SIGQUIT, &sa, NULL);
+	}
+	else if (mode == BIO_SIG_HEREDOC)
+	{
+		sa.sa_handler = handle_heredoc_sigint;
+		sigaction(SIGINT, &sa, NULL);
+		sa.sa_handler = SIG_IGN;
+		sigaction(SIGQUIT, &sa, NULL);
+	}
 }

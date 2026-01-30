@@ -66,6 +66,7 @@ void	shell_loop(t_data *data)
 	while (1)
 	{
 		input = get_next_input();
+		data->input_line = input;
 		if (!input)
 		{
 			if (isatty(STDIN_FILENO))
@@ -73,11 +74,9 @@ void	shell_loop(t_data *data)
 			break ;
 		}
 		if (input[0])
-		{
-			add_history(input);
 			process_input(input, data);
-		}
 		free(input);
+		data->input_line = NULL;
 	}
 }
 
@@ -87,7 +86,7 @@ int	main(int argc, char **argv, char **envp)
 
 	(void)argc;
 	(void)argv;
-	setup_signals();
+	setup_signals(BIO_SIG_PROMPT);
 	init_data(&data, envp);
 	shell_loop(&data);
 	cleanup_data(&data);

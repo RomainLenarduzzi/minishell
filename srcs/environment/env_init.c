@@ -81,6 +81,8 @@ t_env	*init_env(char **envp)
 	t_env	*env;
 	t_env	*new_node;
 	int		i;
+	char	*user_env;
+	char	*home_env;
 
 	env = NULL;
 	i = 0;
@@ -92,5 +94,34 @@ t_env	*init_env(char **envp)
 		add_env_node(&env, new_node);
 		i++;
 	}
+	if (!get_env_value(env, "USER"))
+	{
+		user_env = getenv("USER");
+		if (user_env)
+		{
+			new_node = create_env_node("USER=");
+			if (new_node)
+			{
+				free(new_node->value);
+				new_node->value = ft_strdup(user_env);
+				add_env_node(&env, new_node);
+			}
+		}
+	}
+	if (!get_env_value(env, "HOME"))
+	{
+		home_env = getenv("HOME");
+		if (home_env)
+		{
+			new_node = create_env_node("HOME=");
+			if (new_node)
+			{
+				free(new_node->value);
+				new_node->value = ft_strdup(home_env);
+				add_env_node(&env, new_node);
+			}
+		}
+	}
 	return (env);
 }
+

@@ -42,7 +42,7 @@ void	add_token(t_token **tokens, t_token *new_token)
 
 int	is_separator(char c)
 {
-	return (c == ' ' || c == '\t' || c == '|' || c == '<' || c == '>');
+	return (c == ' ' || c == '\t' || c == '|' || c == '<' || c == '>' || c == '&' || c == '(' || c == ')');
 }
 
 void	skip_whitespace(char *input, int *i)

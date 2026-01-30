@@ -25,8 +25,9 @@ static char	*extract_word(char *input, int *i)
 			quote = input[(*i)++];
 			while (input[*i] && input[*i] != quote)
 				(*i)++;
-			if (input[*i])
-				(*i)++;
+			if (!input[*i])
+				return (ft_putstr_fd("minishell: unexpected EOF while looking for matching quote\n", 2), NULL);
+			(*i)++;
 		}
 		else
 			(*i)++;
@@ -40,8 +41,27 @@ static void	assign_redir(char **v, t_token_type *t, char *s, t_token_type type)
 	*t = type;
 }
 
+static int	handle_extended_tokens(char *in, int *i, char **v, t_token_type *t)
+{
+	if (in[*i] == '&' && in[*i + 1] == '&')
+		assign_redir(v, t, "&&", TOKEN_AND);
+	else if (in[*i] == '|' && in[*i + 1] == '|')
+		assign_redir(v, t, "||", TOKEN_OR);
+	else if (in[*i] == '(')
+		assign_redir(v, t, "(", TOKEN_LPAREN);
+	else if (in[*i] == ')')
+		assign_redir(v, t, ")", TOKEN_RPAREN);
+	else
+		return (0);
+	if (*v)
+		*i += ft_strlen(*v);
+	return (1);
+}
+
 static int	handle_redir(char *in, int *i, char **v, t_token_type *t)
 {
+	if (handle_extended_tokens(in, i, v, t))
+		return (1);
 	if (in[*i] == '<' && in[*i + 1] == '<')
 		assign_redir(v, t, "<<", TOKEN_REDIR_HEREDOC);
 	else if (in[*i] == '<')
@@ -63,7 +83,7 @@ static void	handle_separator(t_token **tokens, char *input, int *i)
 	t_token_type	type;
 
 	val = NULL;
-	if (input[*i] == '|')
+	if (input[*i] == '|' && input[*i + 1] != '|')
 	{
 		val = ft_strdup("|");
 		type = TOKEN_PIPE;
@@ -75,7 +95,7 @@ static void	handle_separator(t_token **tokens, char *input, int *i)
 		add_token(tokens, create_token(type, val));
 }
 
-t_token	*tokenize(char *input)
+t_token	*tokenize(char *input, int *exit_status)
 {
 	t_token	*tokens;
 	int		i;
@@ -93,9 +113,15 @@ t_token	*tokenize(char *input)
 		else
 		{
 			word = extract_word(input, &i);
-			if (word && word[0])
+			if (!word)
+			{
+				*exit_status = 2;
+				free_tokens(tokens);
+				return (NULL);
+			}
+			if (word[0])
 				add_token(&tokens, create_token(TOKEN_WORD, word));
-			else if (word)
+			else
 				free(word);
 		}
 	}

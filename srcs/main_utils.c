@@ -19,6 +19,7 @@ void	init_data(t_data *data, char **envp)
 	data->env = init_env(envp);
 	data->envp = envp;
 	data->exit_status = 0;
+	data->input_line = NULL;
 }
 
 void	cleanup_data(t_data *data)
@@ -29,6 +30,8 @@ void	cleanup_data(t_data *data)
 		free_cmds(data->cmds);
 	if (data->env)
 		free_env(data->env);
+	if (data->input_line)
+		free(data->input_line);
 	rl_clear_history();
 }
 
@@ -38,7 +41,7 @@ void	process_input(char *input, t_data *data)
 		return ;
 	if (isatty(STDIN_FILENO))
 		add_history(input);
-	data->tokens = tokenize(input);
+	data->tokens = tokenize(input, &data->exit_status);
 	if (!data->tokens)
 		return ;
 	data->cmds = parse_tokens(data->tokens, data);

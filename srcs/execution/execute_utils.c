@@ -47,28 +47,39 @@ void	wait_all_children(pid_t last_pid, t_data *data)
 		;
 }
 
+int	dispatch_builtin_cmd(t_cmd *cmd, t_data *data, int fd_out)
+{
+	if (ft_strcmp(cmd->args[0], "echo") == 0)
+		return (builtin_echo(cmd->args, fd_out));
+	else if (ft_strcmp(cmd->args[0], "cd") == 0)
+		return (builtin_cd(cmd->args, data));
+	else if (ft_strcmp(cmd->args[0], "pwd") == 0)
+		return (builtin_pwd(fd_out));
+	else if (ft_strcmp(cmd->args[0], "export") == 0)
+		return (builtin_export(cmd->args, data));
+	else if (ft_strcmp(cmd->args[0], "unset") == 0)
+		return (builtin_unset(cmd->args, data));
+	else if (ft_strcmp(cmd->args[0], "env") == 0)
+		return (builtin_env(data, fd_out));
+	else if (ft_strcmp(cmd->args[0], "exit") == 0)
+		return (builtin_exit(cmd->args, data));
+	return (0);
+}
+
 int	exec_builtin_cmd(t_cmd *cmd, t_data *data)
 {
 	int	ret;
 	int	f[2];
 
 	if (resolve_redirections(cmd, &f[0], &f[1]) != 0)
+	{
+		if (f[0] != STDIN_FILENO && f[0] > 0)
+			close(f[0]);
+		if (f[1] != STDOUT_FILENO && f[1] > 0)
+			close(f[1]);
 		return (1);
-	ret = 0;
-	if (ft_strcmp(cmd->args[0], "echo") == 0)
-		ret = builtin_echo(cmd->args, f[1]);
-	else if (ft_strcmp(cmd->args[0], "cd") == 0)
-		ret = builtin_cd(cmd->args, data);
-	else if (ft_strcmp(cmd->args[0], "pwd") == 0)
-		ret = builtin_pwd(f[1]);
-	else if (ft_strcmp(cmd->args[0], "export") == 0)
-		ret = builtin_export(cmd->args, data);
-	else if (ft_strcmp(cmd->args[0], "unset") == 0)
-		ret = builtin_unset(cmd->args, data);
-	else if (ft_strcmp(cmd->args[0], "env") == 0)
-		ret = builtin_env(data, f[1]);
-	else if (ft_strcmp(cmd->args[0], "exit") == 0)
-		ret = builtin_exit(cmd->args, data);
+	}
+	ret = dispatch_builtin_cmd(cmd, data, f[1]);
 	if (f[0] != STDIN_FILENO)
 		close(f[0]);
 	if (f[1] != STDOUT_FILENO)

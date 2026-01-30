@@ -34,11 +34,14 @@ int	handle_heredoc(t_redir *redir, t_data *data)
 	fd = open(fname, O_WRONLY | O_CREAT | O_TRUNC, 0644);
 	if (fd < 0)
 		return (free(fname), perror("heredoc open"), -1);
+	setup_signals(BIO_SIG_HEREDOC);
 	while (1)
 	{
 		line = readline("> ");
-		if (!line || ft_strcmp(line, redir->filename) == 0)
+		if (!line || ft_strcmp(line, redir->filename) == 0 || g_signal == 130)
 		{
+			if (g_signal == 130)
+				data->exit_status = 130;
 			free(line);
 			break ;
 		}
@@ -46,6 +49,14 @@ int	handle_heredoc(t_redir *redir, t_data *data)
 		ft_putstr_fd(line, fd);
 		ft_putstr_fd("\n", fd);
 		free(line);
+	}
+	setup_signals(BIO_SIG_PROMPT);
+	if (g_signal == 130)
+	{
+		close(fd);
+		unlink(fname);
+		free(fname);
+		return (-1);
 	}
 	close(fd);
 	(free(redir->filename), redir->filename = fname);
