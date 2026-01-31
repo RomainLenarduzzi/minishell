@@ -12,6 +12,19 @@
 
 #include "../../includes/minishell.h"
 
+static int	has_overflow(char *str)
+{
+	long long	num;
+	char		*endptr;
+
+	errno = 0;
+	num = strtoll(str, &endptr, 10);
+	if (errno == ERANGE || *endptr != '\0')
+		return (1);
+	(void)num;
+	return (0);
+}
+
 static int	is_str_num(char *str)
 {
 	int	i;
@@ -27,6 +40,8 @@ static int	is_str_num(char *str)
 			return (0);
 		i++;
 	}
+	if (has_overflow(str))
+		return (0);
 	return (1);
 }
 
@@ -48,7 +63,7 @@ int	builtin_exit(char **args, t_data *data)
 		if (args[2])
 		{
 			ft_putstr_fd("minishell: exit: too many arguments\n", 2);
-			return (1);
+			return (2);
 		}
 		exit_code = ft_atoi(args[1]);
 	}

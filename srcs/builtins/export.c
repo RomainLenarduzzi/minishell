@@ -35,26 +35,26 @@ static char	*get_key(char *str)
 
 static char	*get_val(char *str)
 {
-	int	i;
+	char	*equal_sign;
+	char	*value;
 
-	i = 0;
-	while (str[i] && str[i] != '=')
-		i++;
-	if (!str[i])
+	equal_sign = ft_strchr(str, '=');
+	if (!equal_sign)
 		return (NULL);
-	return (ft_strdup(&str[i + 1]));
+	value = ft_strdup(equal_sign + 1);
+	return (value);
 }
 
-static int	is_valid_identifier(char *str)
+static int	is_valid_identifier(char *key)
 {
 	int	i;
 
-	if (!str || !*str || (!isalpha(str[0]) && str[0] != '_'))
+	if (!key || (!isalpha(key[0]) && key[0] != '_'))
 		return (0);
 	i = 1;
-	while (str[i])
+	while (key[i])
 	{
-		if (!isalnum(str[i]) && str[i] != '_')
+		if (!isalnum(key[i]) && key[i] != '_')
 			return (0);
 		i++;
 	}
@@ -70,6 +70,26 @@ static int	print_export_error(char *arg, char *key)
 	return (1);
 }
 
+static void	print_export_list(t_env *env, int fd)
+{
+	t_env	*curr;
+
+	curr = env;
+	while (curr)
+	{
+		ft_putstr_fd("declare -x ", fd);
+		ft_putstr_fd(curr->key, fd);
+		if (curr->value)
+		{
+			ft_putstr_fd("=\"", fd);
+			ft_putstr_fd(curr->value, fd);
+			ft_putstr_fd("\"", fd);
+		}
+		ft_putstr_fd("\n", fd);
+		curr = curr->next;
+	}
+}
+
 int	builtin_export(char **args, t_data *data)
 {
 	char	*key;
@@ -78,6 +98,11 @@ int	builtin_export(char **args, t_data *data)
 	int		ret;
 
 	ret = 0;
+	if (!args[1])
+	{
+		print_export_list(data->env, 1);
+		return (0);
+	}
 	i = 0;
 	while (args[++i])
 	{

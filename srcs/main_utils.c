@@ -40,7 +40,10 @@ void	process_input(char *input, t_data *data)
 		add_history(input);
 	data->tokens = tokenize(input);
 	if (!data->tokens)
+	{
+		data->exit_status = 2;
 		return ;
+	}
 	data->cmds = parse_tokens(data->tokens, data);
 	free_tokens(data->tokens);
 	data->tokens = NULL;

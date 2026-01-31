@@ -158,6 +158,9 @@ char				*expand_token(char *str, t_data *data);
 
 char				*expand_token(char *str, t_data *data);
 
+/* Glob utils */
+char				**expand_wildcard(const char *pattern);
+
 /* Tokenizer Utils */
 t_token				*create_token(t_token_type type, char *value);
 void				add_token(t_token **tokens, t_token *new_token);

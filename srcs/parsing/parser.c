@@ -12,6 +12,48 @@
 
 #include "../../includes/minishell.h"
 
+static void	add_glob_matches(char ***args, int *i, char *exp)
+{
+	char	**matches;
+	int		j;
+
+	matches = expand_wildcard(exp);
+	if (!matches)
+	{
+		(*args)[(*i)++] = exp;
+		return ;
+	}
+	j = 0;
+	while (matches[j])
+	{
+		(*args)[(*i)++] = matches[j];
+		j++;
+	}
+	free(matches);
+	free(exp);
+}
+
+static void	add_split_words(char ***args, int *i, char *exp)
+{
+	char	**words;
+	int		j;
+
+	words = split_string(exp, ' ');
+	if (!words)
+	{
+		(*args)[(*i)++] = exp;
+		return ;
+	}
+	j = 0;
+	while (words[j])
+	{
+		(*args)[(*i)++] = ft_strdup(words[j]);
+		j++;
+	}
+	free_array(words);
+	free(exp);
+}
+
 static int	count_tokens_only(t_token *tokens)
 {
 	int	count;
@@ -41,7 +83,7 @@ static char	**get_cmd_args(t_cmd *cmd, t_token **toks, t_data *data)
 	char	*exp;
 	int		i;
 
-	args = malloc(sizeof(char *) * (count_tokens_only(*toks) + 1));
+	args = malloc(sizeof(char *) * (count_tokens_only(*toks) * 10 + 1));
 	if (!args)
 		return (NULL);
 	i = 0;
@@ -54,7 +96,14 @@ static char	**get_cmd_args(t_cmd *cmd, t_token **toks, t_data *data)
 		{
 			exp = expand_token((*toks)->value, data);
 			if (exp && exp[0] != '\0')
-				args[i++] = exp;
+			{
+				if (ft_strchr(exp, '*') && (*toks)->value[0] != '\'' && (*toks)->value[0] != '"')
+					add_glob_matches(&args, &i, exp);
+				else if (ft_strchr((*toks)->value, '$'))
+					add_split_words(&args, &i, exp);
+				else
+					args[i++] = exp;
+			}
 			else
 				free(exp);
 			*toks = (*toks)->next;
