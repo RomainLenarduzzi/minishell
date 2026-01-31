@@ -99,7 +99,7 @@ static char	**get_cmd_args(t_cmd *cmd, t_token **toks, t_data *data)
 			{
 				if (ft_strchr(exp, '*') && (*toks)->value[0] != '\'' && (*toks)->value[0] != '"')
 					add_glob_matches(&args, &i, exp);
-				else if (ft_strchr((*toks)->value, '$'))
+				else if (ft_strchr((*toks)->value, '$') && (*toks)->value[0] != '\'' && (*toks)->value[0] != '"')
 					add_split_words(&args, &i, exp);
 				else
 					args[i++] = exp;

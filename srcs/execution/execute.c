@@ -30,11 +30,24 @@ void	exec_child(t_cmd *cmd, t_data *data, int prev_fd, int pipe_fd[2])
 
 	dup_child_fds(prev_fd, pipe_fd, (cmd->next != NULL));
 	if (handle_redirections(cmd) != 0)
+	{
+		close(STDIN_FILENO);
+		close(STDOUT_FILENO);
 		exit(1);
+	}
 	if (cmd->args && cmd->args[0] && is_builtin(cmd->args[0]))
-		exit(exec_builtin_cmd(cmd, data));
+	{
+		int exit_code = exec_builtin_cmd(cmd, data);
+		close(STDIN_FILENO);
+		close(STDOUT_FILENO);
+		exit(exit_code);
+	}
 	if (!cmd->args || !cmd->args[0])
+	{
+		close(STDIN_FILENO);
+		close(STDOUT_FILENO);
 		exit(0);
+	}
 	path = get_cmd_path(cmd->args[0], data->envp);
 	if (!path)
 	{
@@ -42,6 +55,8 @@ void	exec_child(t_cmd *cmd, t_data *data, int prev_fd, int pipe_fd[2])
 			print_exec_error(cmd->args[0], "No such file or directory");
 		else
 			print_exec_error(cmd->args[0], "command not found");
+		close(STDIN_FILENO);
+		close(STDOUT_FILENO);
 		exit(127);
 	}
 	execve(path, cmd->args, data->envp);
