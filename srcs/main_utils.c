@@ -36,8 +36,6 @@ void	process_input(char *input, t_data *data)
 {
 	if (!input || input[0] == '\0')
 		return ;
-	if (isatty(STDIN_FILENO))
-		add_history(input);
 	data->tokens = tokenize(input);
 	if (!data->tokens)
 	{
