@@ -71,6 +71,15 @@ void	run_pipeline(t_data *data)
 			close(pipe_fd[1]);
 			prev_fd = pipe_fd[0];
 		}
+		else
+		{
+			// This else block handles the case for the last command.
+			// If it's the last command, no new pipe was created for its output,
+			// so pipe_fd[0] and pipe_fd[1] are not relevant for this iteration's output.
+			// prev_fd would be the read end of the *previous* pipe, which is already closed above.
+			// We just need to ensure prev_fd is reset for the next (non-existent) command.
+			prev_fd = -1;
+		}
 		cmd = cmd->next;
 	}
 	wait_all_children(pid, data);

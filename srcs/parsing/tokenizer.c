@@ -72,9 +72,23 @@ static void	handle_separator(t_token **tokens, char *input, int *i)
 	val = NULL;
 	if (input[*i] == '|')
 	{
-		val = ft_strdup("|");
+		if (input[*i + 1] == '|')
+		{
+			val = ft_strdup("||");
+			(*i) += 2;
+		}
+		else
+		{
+			val = ft_strdup("|");
+			(*i)++;
+		}
 		type = TOKEN_PIPE;
-		(*i)++;
+	}
+	else if (input[*i] == '&' && input[*i + 1] == '&')
+	{
+		val = ft_strdup("&&");
+		type = TOKEN_WORD;
+		(*i) += 2;
 	}
 	else
 		handle_redir(input, i, &val, &type);
@@ -96,9 +110,13 @@ static int	validate_syntax(t_token *tokens)
 		if (curr->type == TOKEN_PIPE)
 		{
 			if (!curr->next)
-				return (ft_putstr_fd("minishell: syntax error near unexpected token `newline'\n", 2), 2);
-			if (curr->next->type == TOKEN_PIPE)
-				return (ft_putstr_fd("minishell: syntax error near unexpected token `|'\n", 2), 2);
+			return (ft_putstr_fd("minishell: syntax error: unexpected end of file\n", 2), 2);
+		if (curr->next->type == TOKEN_PIPE || ft_strcmp(curr->next->value, "||") == 0)
+		{
+			if (ft_strcmp(curr->next->value, "||") == 0)
+				return (ft_putstr_fd("minishell: syntax error near unexpected token `||'\n", 2), 2);
+			return (ft_putstr_fd("minishell: syntax error near unexpected token `|'\n", 2), 2);
+		}
 		}
 		if (curr->type >= TOKEN_REDIR_IN && curr->type <= TOKEN_REDIR_HEREDOC)
 		{
