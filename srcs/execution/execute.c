@@ -6,13 +6,13 @@
 /*   By: romlenar <romlenar@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/29 21:59:38 by romlenar          #+#    #+#             */
-/*   Updated: 2026/01/29 21:59:39 by romlenar         ###   ########.fr       */
+/*   Updated: 2026/01/30 22:36:47 by romlenar         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "../../includes/minishell.h"
 
-static void	handle_exec_fail(char *path, char *cmd)
+static void	handle_exec_fail(char *path, char *cmd, t_data *data)
 {
 	struct stat	sb;
 
@@ -21,6 +21,8 @@ static void	handle_exec_fail(char *path, char *cmd)
 	else
 		print_exec_error(cmd, strerror(errno));
 	free(path);
+	free_cmds(data->cmds);
+	free_env(data->env);
 	exit(126);
 }
 
@@ -30,11 +32,30 @@ void	exec_child(t_cmd *cmd, t_data *data, int prev_fd, int pipe_fd[2])
 
 	dup_child_fds(prev_fd, pipe_fd, (cmd->next != NULL));
 	if (handle_redirections(cmd) != 0)
+	{
+		free_cmds(data->cmds);
+		free_env(data->env);
+		close(STDIN_FILENO);
+		close(STDOUT_FILENO);
 		exit(1);
+	}
 	if (cmd->args && cmd->args[0] && is_builtin(cmd->args[0]))
-		exit(exec_builtin_cmd(cmd, data));
+	{
+		int exit_code = exec_builtin_cmd(cmd, data);
+		free_cmds(data->cmds);
+		free_env(data->env);
+		close(STDIN_FILENO);
+		close(STDOUT_FILENO);
+		exit(exit_code);
+	}
 	if (!cmd->args || !cmd->args[0])
+	{
+		free_cmds(data->cmds);
+		free_env(data->env);
+		close(STDIN_FILENO);
+		close(STDOUT_FILENO);
 		exit(0);
+	}
 	path = get_cmd_path(cmd->args[0], data->envp);
 	if (!path)
 	{
@@ -42,10 +63,14 @@ void	exec_child(t_cmd *cmd, t_data *data, int prev_fd, int pipe_fd[2])
 			print_exec_error(cmd->args[0], "No such file or directory");
 		else
 			print_exec_error(cmd->args[0], "command not found");
+		free_cmds(data->cmds);
+		free_env(data->env);
+		close(STDIN_FILENO);
+		close(STDOUT_FILENO);
 		exit(127);
 	}
 	execve(path, cmd->args, data->envp);
-	handle_exec_fail(path, cmd->args[0]);
+	handle_exec_fail(path, cmd->args[0], data);
 }
 
 void	run_pipeline(t_data *data)

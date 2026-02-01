@@ -6,16 +6,57 @@
 /*   By: romlenar <romlenar@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/29 22:00:05 by romlenar          #+#    #+#             */
-/*   Updated: 2026/01/29 22:13:14 by romlenar         ###   ########.fr       */
+/*   Updated: 2026/01/30 22:46:44 by romlenar         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "../../includes/minishell.h"
 
-static int	count_args_no_redir(t_token *tokens, t_data *data)
+static void	add_glob_matches(char ***args, int *i, char *exp)
 {
-	int		count;
-	char	*tmp;
+	char	**matches;
+	int		j;
+
+	matches = expand_wildcard(exp);
+	if (!matches)
+	{
+		(*args)[(*i)++] = exp;
+		return ;
+	}
+	j = 0;
+	while (matches[j])
+	{
+		(*args)[(*i)++] = matches[j];
+		j++;
+	}
+	free(matches);
+	free(exp);
+}
+
+static void	add_split_words(char ***args, int *i, char *exp)
+{
+	char	**words;
+	int		j;
+
+	words = split_string(exp, ' ');
+	if (!words)
+	{
+		(*args)[(*i)++] = exp;
+		return ;
+	}
+	j = 0;
+	while (words[j])
+	{
+		(*args)[(*i)++] = ft_strdup(words[j]);
+		j++;
+	}
+	free_array(words);
+	free(exp);
+}
+
+static int	count_tokens_only(t_token *tokens)
+{
+	int	count;
 
 	count = 0;
 	while (tokens && tokens->type != TOKEN_PIPE)
@@ -29,9 +70,7 @@ static int	count_args_no_redir(t_token *tokens, t_data *data)
 		}
 		else
 		{
-			tmp = expand_token(tokens->value, data);
-			(tmp && tmp[0] != '\0' && count++);
-			free(tmp);
+			count++;
 			tokens = tokens->next;
 		}
 	}
@@ -44,7 +83,7 @@ static char	**get_cmd_args(t_cmd *cmd, t_token **toks, t_data *data)
 	char	*exp;
 	int		i;
 
-	args = malloc(sizeof(char *) * (count_args_no_redir(*toks, data) + 1));
+	args = malloc(sizeof(char *) * (count_tokens_only(*toks) * 10 + 1));
 	if (!args)
 		return (NULL);
 	i = 0;
@@ -57,7 +96,14 @@ static char	**get_cmd_args(t_cmd *cmd, t_token **toks, t_data *data)
 		{
 			exp = expand_token((*toks)->value, data);
 			if (exp && exp[0] != '\0')
-				args[i++] = exp;
+			{
+				if (ft_strchr(exp, '*') && (*toks)->value[0] != '\'' && (*toks)->value[0] != '"')
+					add_glob_matches(&args, &i, exp);
+				else if (ft_strchr((*toks)->value, '$') && (*toks)->value[0] != '\'' && (*toks)->value[0] != '"')
+					add_split_words(&args, &i, exp);
+				else
+					args[i++] = exp;
+			}
 			else
 				free(exp);
 			*toks = (*toks)->next;

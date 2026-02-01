@@ -47,7 +47,8 @@ SRCS = srcs/main.c \
 		srcs/utils/ft_strchr.c \
 		srcs/utils/ft_strdup.c \
 		srcs/utils/ft_strjoin.c \
-		srcs/utils/string_split.c
+		srcs/utils/string_split.c \
+		srcs/utils/glob_utils.c
 
 OBJS = $(SRCS:.c=.o)
 

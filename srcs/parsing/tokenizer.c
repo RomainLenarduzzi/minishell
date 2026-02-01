@@ -25,6 +25,13 @@ static char	*extract_word(char *input, int *i)
 			quote = input[(*i)++];
 			while (input[*i] && input[*i] != quote)
 				(*i)++;
+			if (!input[*i])
+			{
+				ft_putstr_fd("minishell: unexpected EOF while looking for matching `", 2);
+				write(2, &quote, 1);
+				ft_putstr_fd("'\n", 2);
+				return (NULL);
+			}
 			if (input[*i])
 				(*i)++;
 		}
@@ -75,6 +82,50 @@ static void	handle_separator(t_token **tokens, char *input, int *i)
 		add_token(tokens, create_token(type, val));
 }
 
+static int	validate_syntax(t_token *tokens)
+{
+	t_token	*curr;
+
+	if (!tokens)
+		return (0);
+	if (tokens->type == TOKEN_PIPE)
+		return (ft_putstr_fd("minishell: syntax error near unexpected token `|'\n", 2), 2);
+	curr = tokens;
+	while (curr)
+	{
+		if (curr->type == TOKEN_PIPE)
+		{
+			if (!curr->next)
+				return (ft_putstr_fd("minishell: syntax error near unexpected token `newline'\n", 2), 2);
+			if (curr->next->type == TOKEN_PIPE)
+				return (ft_putstr_fd("minishell: syntax error near unexpected token `|'\n", 2), 2);
+		}
+		if (curr->type >= TOKEN_REDIR_IN && curr->type <= TOKEN_REDIR_HEREDOC)
+		{
+			if (!curr->next || curr->next->type != TOKEN_WORD)
+			{
+				if (!curr->next)
+					return (ft_putstr_fd("minishell: syntax error near unexpected token `newline'\n", 2), 2);
+				ft_putstr_fd("minishell: syntax error near unexpected token `", 2);
+				ft_putstr_fd(curr->next->value, 2);
+				return (ft_putstr_fd("'\n", 2), 2);
+			}
+		}
+		if (ft_strcmp(curr->value, "&&") == 0)
+			return (ft_putstr_fd("minishell: syntax error near unexpected token `&&'\n", 2), 2);
+		if (ft_strcmp(curr->value, "||") == 0)
+			return (ft_putstr_fd("minishell: syntax error near unexpected token `||'\n", 2), 2);
+		if (curr->value[0] == '(' || curr->value[0] == ')')
+		{
+			ft_putstr_fd("minishell: syntax error near unexpected token `", 2);
+			write(2, &curr->value[0], 1);
+			return (ft_putstr_fd("'\n", 2), 2);
+		}
+		curr = curr->next;
+	}
+	return (0);
+}
+
 t_token	*tokenize(char *input)
 {
 	t_token	*tokens;
@@ -93,11 +144,21 @@ t_token	*tokenize(char *input)
 		else
 		{
 			word = extract_word(input, &i);
-			if (word && word[0])
+			if (!word)
+			{
+				free_tokens(tokens);
+				return (NULL);
+			}
+			if (word[0])
 				add_token(&tokens, create_token(TOKEN_WORD, word));
 			else if (word)
 				free(word);
 		}
+	}
+	if (validate_syntax(tokens) != 0)
+	{
+		free_tokens(tokens);
+		return (NULL);
 	}
 	return (tokens);
 }
