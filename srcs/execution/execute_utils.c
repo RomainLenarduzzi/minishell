@@ -47,6 +47,25 @@ void	wait_all_children(pid_t last_pid, t_data *data)
 		;
 }
 
+int	exec_builtin_in_child(t_cmd *cmd, t_data *data)
+{
+	if (ft_strcmp(cmd->args[0], "echo") == 0)
+		return (builtin_echo(cmd->args, STDOUT_FILENO));
+	else if (ft_strcmp(cmd->args[0], "cd") == 0)
+		return (builtin_cd(cmd->args, data));
+	else if (ft_strcmp(cmd->args[0], "pwd") == 0)
+		return (builtin_pwd(STDOUT_FILENO));
+	else if (ft_strcmp(cmd->args[0], "export") == 0)
+		return (builtin_export(cmd->args, data));
+	else if (ft_strcmp(cmd->args[0], "unset") == 0)
+		return (builtin_unset(cmd->args, data));
+	else if (ft_strcmp(cmd->args[0], "env") == 0)
+		return (builtin_env(data, STDOUT_FILENO));
+	else if (ft_strcmp(cmd->args[0], "exit") == 0)
+		return (builtin_exit(cmd->args, data));
+	return (0);
+}
+
 int	exec_builtin_cmd(t_cmd *cmd, t_data *data)
 {
 	int	ret;

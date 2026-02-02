@@ -170,6 +170,7 @@ void				skip_whitespace(char *input, int *i);
 /* Execution Utils */
 void				print_exec_error(char *cmd, char *msg);
 int					exec_builtin_cmd(t_cmd *cmd, t_data *data);
+int					exec_builtin_in_child(t_cmd *cmd, t_data *data);
 void				dup_child_fds(int prev_fd, int pipe_fd[2], int has_next);
 void				wait_all_children(pid_t last_pid, t_data *data);
 

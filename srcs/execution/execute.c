@@ -41,7 +41,7 @@ void	exec_child(t_cmd *cmd, t_data *data, int prev_fd, int pipe_fd[2])
 	}
 	if (cmd->args && cmd->args[0] && is_builtin(cmd->args[0]))
 	{
-		int exit_code = exec_builtin_cmd(cmd, data);
+		int exit_code = exec_builtin_in_child(cmd, data);
 		free_cmds(data->cmds);
 		free_env(data->env);
 		close(STDIN_FILENO);
