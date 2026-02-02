@@ -6,7 +6,7 @@
 /*   By: romlenar <romlenar@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/29 21:56:12 by romlenar          #+#    #+#             */
-/*   Updated: 2026/01/30 22:32:11 by romlenar         ###   ########.fr       */
+/*   Updated: 2026/02/02 20:46:13 by romlenar         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -63,7 +63,7 @@ int	builtin_exit(char **args, t_data *data)
 		if (args[2])
 		{
 			ft_putstr_fd("minishell: exit: too many arguments\n", 2);
-			return (2);
+			return (1);
 		}
 		exit_code = ft_atoi(args[1]);
 	}

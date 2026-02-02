@@ -6,7 +6,7 @@
 /*   By: romlenar <romlenar@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/29 21:56:03 by romlenar          #+#    #+#             */
-/*   Updated: 2026/01/29 21:56:04 by romlenar         ###   ########.fr       */
+/*   Updated: 2026/02/02 20:45:47 by romlenar         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -19,7 +19,7 @@ int	builtin_cd(char **args, t_data *data)
 	if (args[1] && args[2])
 	{
 		ft_putstr_fd("minishell: cd: too many arguments\n", 2);
-		return (2);
+		return (1);
 	}
 	path = args[1];
 	if (!path)
