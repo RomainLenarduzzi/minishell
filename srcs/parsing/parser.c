@@ -83,7 +83,7 @@ static char	**get_cmd_args(t_cmd *cmd, t_token **toks, t_data *data)
 	char	*exp;
 	int		i;
 
-	args = malloc(sizeof(char *) * (count_tokens_only(*toks) * 10 + 1));
+	args = malloc(sizeof(char *) * (count_tokens_only(*toks) * 200 + 1));
 	if (!args)
 		return (NULL);
 	i = 0;
