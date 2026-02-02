@@ -57,6 +57,10 @@ int	resolve_redirections(t_cmd *cmd, int *fd_in, int *fd_out)
 		if (fd < 0)
 		{
 			perror(r->filename);
+			if (*fd_in > 0)
+				close(*fd_in);
+			if (*fd_out > 1)
+				close(*fd_out);
 			return (-1);
 		}
 		target = fd_out;
