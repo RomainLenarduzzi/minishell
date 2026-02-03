@@ -6,7 +6,7 @@
 /*   By: romlenar <romlenar@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/29 21:59:38 by romlenar          #+#    #+#             */
-/*   Updated: 2026/01/30 22:36:47 by romlenar         ###   ########.fr       */
+/*   Updated: 2026/02/03 21:05:04 by romlenar         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -26,36 +26,10 @@ static void	handle_exec_fail(char *path, char *cmd, t_data *data)
 	exit(126);
 }
 
-void	exec_child(t_cmd *cmd, t_data *data, int prev_fd, int pipe_fd[2])
+static void	exec_external(t_cmd *cmd, t_data *data)
 {
 	char	*path;
 
-	dup_child_fds(prev_fd, pipe_fd, (cmd->next != NULL));
-	if (handle_redirections(cmd) != 0)
-	{
-		free_cmds(data->cmds);
-		free_env(data->env);
-		close(STDIN_FILENO);
-		close(STDOUT_FILENO);
-		exit(1);
-	}
-	if (cmd->args && cmd->args[0] && is_builtin(cmd->args[0]))
-	{
-		int exit_code = exec_builtin_in_child(cmd, data);
-		free_cmds(data->cmds);
-		free_env(data->env);
-		close(STDIN_FILENO);
-		close(STDOUT_FILENO);
-		exit(exit_code);
-	}
-	if (!cmd->args || !cmd->args[0])
-	{
-		free_cmds(data->cmds);
-		free_env(data->env);
-		close(STDIN_FILENO);
-		close(STDOUT_FILENO);
-		exit(0);
-	}
 	path = get_cmd_path(cmd->args[0], data->envp);
 	if (!path)
 	{
@@ -71,6 +45,33 @@ void	exec_child(t_cmd *cmd, t_data *data, int prev_fd, int pipe_fd[2])
 	}
 	execve(path, cmd->args, data->envp);
 	handle_exec_fail(path, cmd->args[0], data);
+}
+
+void	exec_child(t_cmd *cmd, t_data *data, int prev_fd, int pipe_fd[2])
+{
+	int	exit_code;
+
+	dup_child_fds(prev_fd, pipe_fd, (cmd->next != NULL));
+	if (handle_redirections(cmd) != 0)
+	{
+		free_cmds(data->cmds);
+		free_env(data->env);
+		(close(0), close(1), exit(1));
+	}
+	if (cmd->args && cmd->args[0] && is_builtin(cmd->args[0]))
+	{
+		exit_code = exec_builtin_in_child(cmd, data);
+		free_cmds(data->cmds);
+		free_env(data->env);
+		(close(0), close(1), exit(exit_code));
+	}
+	if (!cmd->args || !cmd->args[0])
+	{
+		free_cmds(data->cmds);
+		free_env(data->env);
+		(close(0), close(1), exit(0));
+	}
+	exec_external(cmd, data);
 }
 
 void	run_pipeline(t_data *data)
