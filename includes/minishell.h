@@ -6,7 +6,7 @@
 /*   By: romlenar <romlenar@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/29 22:14:52 by romlenar          #+#    #+#             */
-/*   Updated: 2026/01/29 22:15:53 by romlenar         ###   ########.fr       */
+/*   Updated: 2026/02/03 20:48:39 by romlenar         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -130,6 +130,7 @@ int					builtin_exit(char **args, t_data *data);
 int					resolve_redirections(t_cmd *cmd, int *fd_in, int *fd_out);
 
 /* Environment */
+char				*get_key(char *env_str);
 char				*get_env_value(t_env *env, char *key);
 void				set_env_value(t_env **env, char *key, char *value);
 void				unset_env_value(t_env **env, char *key);

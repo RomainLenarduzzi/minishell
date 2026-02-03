@@ -6,32 +6,11 @@
 /*   By: romlenar <romlenar@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/29 21:56:16 by romlenar          #+#    #+#             */
-/*   Updated: 2026/01/29 21:56:17 by romlenar         ###   ########.fr       */
+/*   Updated: 2026/02/03 20:50:53 by romlenar         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "../../includes/minishell.h"
-
-static char	*get_key(char *str)
-{
-	int		i;
-	char	*key;
-
-	i = 0;
-	while (str[i] && str[i] != '=')
-		i++;
-	key = malloc(sizeof(char) * (i + 1));
-	if (!key)
-		return (NULL);
-	i = 0;
-	while (str[i] && str[i] != '=')
-	{
-		key[i] = str[i];
-		i++;
-	}
-	key[i] = '\0';
-	return (key);
-}
 
 static char	*get_val(char *str)
 {
@@ -49,12 +28,15 @@ static int	is_valid_identifier(char *key)
 {
 	int	i;
 
-	if (!key || (!isalpha(key[0]) && key[0] != '_'))
+	if (!key || (!((key[0] >= 'a' && key[0] <= 'z') || (key[0] >= 'A'
+					&& key[0] <= 'Z')) && key[0] != '_'))
 		return (0);
 	i = 1;
 	while (key[i])
 	{
-		if (!isalnum(key[i]) && key[i] != '_')
+		if (!((key[i] >= 'a' && key[i] <= 'z') || (key[i] >= 'A'
+					&& key[i] <= 'Z') || (key[i] >= '0' && key[i] <= '9'))
+			&& key[i] != '_')
 			return (0);
 		i++;
 	}
@@ -97,13 +79,10 @@ int	builtin_export(char **args, t_data *data)
 	int		i;
 	int		ret;
 
+	i = 0;
 	ret = 0;
 	if (!args[1])
-	{
-		print_export_list(data->env, 1);
-		return (0);
-	}
-	i = 0;
+		return (print_export_list(data->env, 1), 0);
 	while (args[++i])
 	{
 		key = get_key(args[i]);
@@ -114,8 +93,7 @@ int	builtin_export(char **args, t_data *data)
 			value = get_val(args[i]);
 			if (key && value)
 				set_env_value(&data->env, key, value);
-			free(key);
-			free(value);
+			(free(key), free(value));
 		}
 	}
 	return (ret);

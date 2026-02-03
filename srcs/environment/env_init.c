@@ -6,13 +6,13 @@
 /*   By: romlenar <romlenar@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/29 21:56:51 by romlenar          #+#    #+#             */
-/*   Updated: 2026/01/29 21:56:52 by romlenar         ###   ########.fr       */
+/*   Updated: 2026/02/03 20:48:04 by romlenar         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "../../includes/minishell.h"
 
-static char	*get_key(char *env_str)
+char	*get_key(char *env_str)
 {
 	int		i;
 	char	*key;
