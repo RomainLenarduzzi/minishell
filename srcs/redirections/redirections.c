@@ -6,7 +6,7 @@
 /*   By: romlenar <romlenar@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/29 22:07:54 by romlenar          #+#    #+#             */
-/*   Updated: 2026/01/29 22:08:57 by romlenar         ###   ########.fr       */
+/*   Updated: 2026/02/04 20:35:04 by romlenar         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -42,6 +42,16 @@ int	handle_redirections(t_cmd *cmd)
 	return (0);
 }
 
+static int	redir_error(char *filename, int *fd_in, int *fd_out)
+{
+	perror(filename);
+	if (*fd_in > 0)
+		close(*fd_in);
+	if (*fd_out > 1)
+		close(*fd_out);
+	return (-1);
+}
+
 int	resolve_redirections(t_cmd *cmd, int *fd_in, int *fd_out)
 {
 	int		fd;
@@ -55,14 +65,7 @@ int	resolve_redirections(t_cmd *cmd, int *fd_in, int *fd_out)
 	{
 		fd = open_redir_file(r);
 		if (fd < 0)
-		{
-			perror(r->filename);
-			if (*fd_in > 0)
-				close(*fd_in);
-			if (*fd_out > 1)
-				close(*fd_out);
-			return (-1);
-		}
+			return (redir_error(r->filename, fd_in, fd_out));
 		target = fd_out;
 		if (r->type == TOKEN_REDIR_IN || r->type == TOKEN_REDIR_HEREDOC)
 			target = fd_in;
