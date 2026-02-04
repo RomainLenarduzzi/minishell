@@ -27,6 +27,7 @@ static char	*get_filename(void)
 int	handle_heredoc(t_redir *redir, t_data *data)
 {
 	char	*line;
+	char	*expanded;
 	char	*fname;
 	int		fd;
 
@@ -42,10 +43,11 @@ int	handle_heredoc(t_redir *redir, t_data *data)
 			free(line);
 			break ;
 		}
-		line = expand_token(line, data);
-		ft_putstr_fd(line, fd);
-		ft_putstr_fd("\n", fd);
+		expanded = expand_token(line, data);
 		free(line);
+		ft_putstr_fd(expanded, fd);
+		ft_putstr_fd("\n", fd);
+		free(expanded);
 	}
 	close(fd);
 	(free(redir->filename), redir->filename = fname);

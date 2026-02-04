@@ -23,6 +23,8 @@ static void	handle_exec_fail(char *path, char *cmd, t_data *data)
 	free(path);
 	free_cmds(data->cmds);
 	free_env(data->env);
+	close(STDIN_FILENO);
+	close(STDOUT_FILENO);
 	exit(126);
 }
 
@@ -56,20 +58,26 @@ void	exec_child(t_cmd *cmd, t_data *data, int prev_fd, int pipe_fd[2])
 	{
 		free_cmds(data->cmds);
 		free_env(data->env);
-		(close(0), close(1), exit(1));
+		close(STDIN_FILENO);
+		close(STDOUT_FILENO);
+		exit(1);
 	}
 	if (cmd->args && cmd->args[0] && is_builtin(cmd->args[0]))
 	{
 		exit_code = exec_builtin_in_child(cmd, data);
 		free_cmds(data->cmds);
 		free_env(data->env);
-		(close(0), close(1), exit(exit_code));
+		close(STDIN_FILENO);
+		close(STDOUT_FILENO);
+		exit(exit_code);
 	}
 	if (!cmd->args || !cmd->args[0])
 	{
 		free_cmds(data->cmds);
 		free_env(data->env);
-		(close(0), close(1), exit(0));
+		close(STDIN_FILENO);
+		close(STDOUT_FILENO);
+		exit(0);
 	}
 	exec_external(cmd, data);
 }
