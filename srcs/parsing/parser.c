@@ -6,81 +6,36 @@
 /*   By: romlenar <romlenar@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/29 22:00:05 by romlenar          #+#    #+#             */
-/*   Updated: 2026/01/30 22:46:44 by romlenar         ###   ########.fr       */
+/*   Updated: 2026/02/04 20:17:25 by romlenar         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "../../includes/minishell.h"
 
-static void	add_glob_matches(char ***args, int *i, char *exp)
+static void	handle_token_logic(char ***args, int *i, t_token **toks, t_data *d)
 {
-	char	**matches;
-	int		j;
+	char	*exp;
 
-	matches = expand_wildcard(exp);
-	if (!matches)
+	exp = expand_token((*toks)->value, d);
+	if (exp && exp[0] != '\0')
 	{
-		(*args)[(*i)++] = exp;
-		return ;
-	}
-	j = 0;
-	while (matches[j])
-	{
-		(*args)[(*i)++] = matches[j];
-		j++;
-	}
-	free(matches);
-	free(exp);
-}
-
-static void	add_split_words(char ***args, int *i, char *exp)
-{
-	char	**words;
-	int		j;
-
-	words = split_string(exp, ' ');
-	if (!words)
-	{
-		(*args)[(*i)++] = exp;
-		return ;
-	}
-	j = 0;
-	while (words[j])
-	{
-		(*args)[(*i)++] = ft_strdup(words[j]);
-		j++;
-	}
-	free_array(words);
-	free(exp);
-}
-
-static int	count_tokens_only(t_token *tokens)
-{
-	int	count;
-
-	count = 0;
-	while (tokens && tokens->type != TOKEN_PIPE)
-	{
-		if (tokens->type >= TOKEN_REDIR_IN
-			&& tokens->type <= TOKEN_REDIR_HEREDOC)
-		{
-			tokens = tokens->next;
-			if (tokens)
-				tokens = tokens->next;
-		}
+		if (ft_strchr(exp, '*') && (*toks)->value[0] != '\''
+			&& (*toks)->value[0] != '"')
+			add_glob_matches(args, i, exp);
+		else if (ft_strchr((*toks)->value, '$') && (*toks)->value[0] != '\''
+			&& (*toks)->value[0] != '"')
+			add_split_words(args, i, exp);
 		else
-		{
-			count++;
-			tokens = tokens->next;
-		}
+			(*args)[(*i)++] = exp;
 	}
-	return (count);
+	else
+		free(exp);
+	*toks = (*toks)->next;
 }
 
 static char	**get_cmd_args(t_cmd *cmd, t_token **toks, t_data *data)
 {
 	char	**args;
-	char	*exp;
 	int		i;
 
 	args = malloc(sizeof(char *) * (count_tokens_only(*toks) * 200 + 1));
@@ -93,21 +48,7 @@ static char	**get_cmd_args(t_cmd *cmd, t_token **toks, t_data *data)
 			&& (*toks)->type <= TOKEN_REDIR_HEREDOC)
 			handle_redirection(cmd, toks, data);
 		else
-		{
-			exp = expand_token((*toks)->value, data);
-			if (exp && exp[0] != '\0')
-			{
-				if (ft_strchr(exp, '*') && (*toks)->value[0] != '\'' && (*toks)->value[0] != '"')
-					add_glob_matches(&args, &i, exp);
-				else if (ft_strchr((*toks)->value, '$') && (*toks)->value[0] != '\'' && (*toks)->value[0] != '"')
-					add_split_words(&args, &i, exp);
-				else
-					args[i++] = exp;
-			}
-			else
-				free(exp);
-			*toks = (*toks)->next;
-		}
+			handle_token_logic(&args, &i, toks, data);
 	}
 	args[i] = NULL;
 	return (args);

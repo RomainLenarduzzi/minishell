@@ -6,7 +6,7 @@
 #    By: romlenar <romlenar@student.42.fr>          +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2026/01/27 18:41:00 by shell             #+#    #+#              #
-#    Updated: 2026/02/03 20:46:56 by romlenar         ###   ########.fr        #
+#    Updated: 2026/02/03 21:47:44 by romlenar         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -22,6 +22,7 @@ SRCS = srcs/main.c \
 		srcs/parsing/tokenizer.c \
 		srcs/parsing/tokenizer_utils.c \
 		srcs/parsing/parser.c \
+		srcs/parsing/parser_utils.c \
 		srcs/parsing/free_parsing.c \
 		srcs/execution/execute.c \
 		srcs/execution/execute_utils.c \

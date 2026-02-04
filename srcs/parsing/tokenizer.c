@@ -6,7 +6,7 @@
 /*   By: romlenar <romlenar@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/29 22:00:11 by romlenar          #+#    #+#             */
-/*   Updated: 2026/01/29 22:07:35 by romlenar         ###   ########.fr       */
+/*   Updated: 2026/02/04 20:22:08 by romlenar         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -27,41 +27,15 @@ static char	*extract_word(char *input, int *i)
 				(*i)++;
 			if (!input[*i])
 			{
-				ft_putstr_fd("minishell: unexpected EOF while looking for matching `", 2);
-				write(2, &quote, 1);
-				ft_putstr_fd("'\n", 2);
+				ft_putstr_fd("minishell: unexpected EOF for quote\n", 2);
 				return (NULL);
 			}
-			if (input[*i])
-				(*i)++;
+			(*i)++;
 		}
 		else
 			(*i)++;
 	}
 	return (ft_substr(input, start, *i - start));
-}
-
-static void	assign_redir(char **v, t_token_type *t, char *s, t_token_type type)
-{
-	*v = ft_strdup(s);
-	*t = type;
-}
-
-static int	handle_redir(char *in, int *i, char **v, t_token_type *t)
-{
-	if (in[*i] == '<' && in[*i + 1] == '<')
-		assign_redir(v, t, "<<", TOKEN_REDIR_HEREDOC);
-	else if (in[*i] == '<')
-		assign_redir(v, t, "<", TOKEN_REDIR_IN);
-	else if (in[*i] == '>' && in[*i + 1] == '>')
-		assign_redir(v, t, ">>", TOKEN_REDIR_APPEND);
-	else if (in[*i] == '>')
-		assign_redir(v, t, ">", TOKEN_REDIR_OUT);
-	else
-		return (0);
-	if (*v)
-		*i += ft_strlen(*v);
-	return (1);
 }
 
 static void	handle_separator(t_token **tokens, char *input, int *i)
@@ -82,6 +56,27 @@ static void	handle_separator(t_token **tokens, char *input, int *i)
 		add_token(tokens, create_token(type, val));
 }
 
+static int	check_syntax_error(t_token *c)
+{
+	if (c->type == TOKEN_PIPE)
+	{
+		if (!c->next || c->next->type == TOKEN_PIPE)
+			return (ft_putstr_fd("minishell: syntax error near `|'\n", 2), 2);
+	}
+	if (c->type >= TOKEN_REDIR_IN && c->type <= TOKEN_REDIR_HEREDOC)
+	{
+		if (!c->next || c->next->type != TOKEN_WORD)
+			return (ft_putstr_fd("minishell: syntax error near redir\n", 2), 2);
+	}
+	if (ft_strcmp(c->value, "&&") == 0 || ft_strcmp(c->value, "||") == 0
+		|| c->value[0] == '(' || c->value[0] == ')')
+	{
+		ft_putstr_fd("minishell: syntax error: operator not supported\n", 2);
+		return (2);
+	}
+	return (0);
+}
+
 static int	validate_syntax(t_token *tokens)
 {
 	t_token	*curr;
@@ -89,38 +84,15 @@ static int	validate_syntax(t_token *tokens)
 	if (!tokens)
 		return (0);
 	if (tokens->type == TOKEN_PIPE)
-		return (ft_putstr_fd("minishell: syntax error near unexpected token `|'\n", 2), 2);
+	{
+		ft_putstr_fd("minishell: syntax error near `|'\n", 2);
+		return (2);
+	}
 	curr = tokens;
 	while (curr)
 	{
-		if (curr->type == TOKEN_PIPE)
-		{
-			if (!curr->next)
-				return (ft_putstr_fd("minishell: syntax error near unexpected token `newline'\n", 2), 2);
-			if (curr->next->type == TOKEN_PIPE)
-				return (ft_putstr_fd("minishell: syntax error near unexpected token `|'\n", 2), 2);
-		}
-		if (curr->type >= TOKEN_REDIR_IN && curr->type <= TOKEN_REDIR_HEREDOC)
-		{
-			if (!curr->next || curr->next->type != TOKEN_WORD)
-			{
-				if (!curr->next)
-					return (ft_putstr_fd("minishell: syntax error near unexpected token `newline'\n", 2), 2);
-				ft_putstr_fd("minishell: syntax error near unexpected token `", 2);
-				ft_putstr_fd(curr->next->value, 2);
-				return (ft_putstr_fd("'\n", 2), 2);
-			}
-		}
-		if (ft_strcmp(curr->value, "&&") == 0)
-			return (ft_putstr_fd("minishell: syntax error near unexpected token `&&'\n", 2), 2);
-		if (ft_strcmp(curr->value, "||") == 0)
-			return (ft_putstr_fd("minishell: syntax error near unexpected token `||'\n", 2), 2);
-		if (curr->value[0] == '(' || curr->value[0] == ')')
-		{
-			ft_putstr_fd("minishell: syntax error near unexpected token `", 2);
-			write(2, &curr->value[0], 1);
-			return (ft_putstr_fd("'\n", 2), 2);
-		}
+		if (check_syntax_error(curr))
+			return (2);
 		curr = curr->next;
 	}
 	return (0);
@@ -145,20 +117,11 @@ t_token	*tokenize(char *input)
 		{
 			word = extract_word(input, &i);
 			if (!word)
-			{
-				free_tokens(tokens);
-				return (NULL);
-			}
-			if (word[0])
-				add_token(&tokens, create_token(TOKEN_WORD, word));
-			else if (word)
-				free(word);
+				return (free_tokens(tokens), NULL);
+			add_token(&tokens, create_token(TOKEN_WORD, word));
 		}
 	}
 	if (validate_syntax(tokens) != 0)
-	{
-		free_tokens(tokens);
-		return (NULL);
-	}
+		return (free_tokens(tokens), NULL);
 	return (tokens);
 }

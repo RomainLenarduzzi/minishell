@@ -6,7 +6,7 @@
 /*   By: romlenar <romlenar@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/29 22:42:43 by romlenar          #+#    #+#             */
-/*   Updated: 2026/01/29 22:42:44 by romlenar         ###   ########.fr       */
+/*   Updated: 2026/02/04 20:23:59 by romlenar         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -49,4 +49,30 @@ void	skip_whitespace(char *input, int *i)
 {
 	while (input[*i] && (input[*i] == ' ' || input[*i] == '\t'))
 		(*i)++;
+}
+
+int	handle_redir(char *in, int *i, char **v, t_token_type *t)
+{
+	if (in[*i] == '<' && in[*i + 1] == '<')
+		*v = ft_strdup("<<");
+	else if (in[*i] == '<')
+		*v = ft_strdup("<");
+	else if (in[*i] == '>' && in[*i + 1] == '>')
+		*v = ft_strdup(">>");
+	else if (in[*i] == '>')
+		*v = ft_strdup(">");
+	else
+		return (0);
+	if (!*v)
+		return (0);
+	if (ft_strlen(*v) == 2 && in[*i] == '<')
+		*t = TOKEN_REDIR_HEREDOC;
+	else if (ft_strlen(*v) == 2)
+		*t = TOKEN_REDIR_APPEND;
+	else if (in[*i] == '<')
+		*t = TOKEN_REDIR_IN;
+	else
+		*t = TOKEN_REDIR_OUT;
+	*i += ft_strlen(*v);
+	return (1);
 }

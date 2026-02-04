@@ -6,7 +6,7 @@
 /*   By: romlenar <romlenar@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/29 22:14:52 by romlenar          #+#    #+#             */
-/*   Updated: 2026/02/03 20:48:39 by romlenar         ###   ########.fr       */
+/*   Updated: 2026/02/04 20:24:13 by romlenar         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -167,6 +167,7 @@ t_token				*create_token(t_token_type type, char *value);
 void				add_token(t_token **tokens, t_token *new_token);
 int					is_separator(char c);
 void				skip_whitespace(char *input, int *i);
+int					handle_redir(char *in, int *i, char **v, t_token_type *t);
 
 /* Execution Utils */
 void				print_exec_error(char *cmd, char *msg);
@@ -174,5 +175,10 @@ int					exec_builtin_cmd(t_cmd *cmd, t_data *data);
 int					exec_builtin_in_child(t_cmd *cmd, t_data *data);
 void				dup_child_fds(int prev_fd, int pipe_fd[2], int has_next);
 void				wait_all_children(pid_t last_pid, t_data *data);
+
+/* Parser Utils */
+void				add_glob_matches(char ***args, int *i, char *exp);
+void				add_split_words(char ***args, int *i, char *exp);
+int					count_tokens_only(t_token *tokens);
 
 #endif
