@@ -21,29 +21,22 @@ static void	handle_exec_fail(char *path, char *cmd, t_data *data)
 	else
 		print_exec_error(cmd, strerror(errno));
 	free(path);
-	free_cmds(data->cmds);
-	free_env(data->env);
-	close(STDIN_FILENO);
-	close(STDOUT_FILENO);
-	exit(126);
+	exit_child(data, 126);
 }
 
 static void	exec_external(t_cmd *cmd, t_data *data)
 {
-	char	*path;
+	char		*path;
+	struct stat	sb;
 
+	if (cmd->args[0] && cmd->args[0][0] == '\0')
+		handle_empty_cmd(data);
 	path = get_cmd_path(cmd->args[0], data->envp);
 	if (!path)
 	{
-		if (ft_strchr(cmd->args[0], '/'))
-			print_exec_error(cmd->args[0], "No such file or directory");
-		else
-			print_exec_error(cmd->args[0], "command not found");
-		free_cmds(data->cmds);
-		free_env(data->env);
-		close(STDIN_FILENO);
-		close(STDOUT_FILENO);
-		exit(127);
+		if (ft_strchr(cmd->args[0], '/') && stat(cmd->args[0], &sb) == 0)
+			handle_no_permission(cmd->args[0], data);
+		handle_cmd_not_found(cmd->args[0], data);
 	}
 	execve(path, cmd->args, data->envp);
 	handle_exec_fail(path, cmd->args[0], data);
@@ -51,34 +44,15 @@ static void	exec_external(t_cmd *cmd, t_data *data)
 
 void	exec_child(t_cmd *cmd, t_data *data, int prev_fd, int pipe_fd[2])
 {
-	int	exit_code;
-
 	dup_child_fds(prev_fd, pipe_fd, (cmd->next != NULL));
 	if (handle_redirections(cmd) != 0)
-	{
-		free_cmds(data->cmds);
-		free_env(data->env);
-		close(STDIN_FILENO);
-		close(STDOUT_FILENO);
-		exit(1);
-	}
+		exit_child(data, 1);
 	if (cmd->args && cmd->args[0] && is_builtin(cmd->args[0]))
-	{
-		exit_code = exec_builtin_in_child(cmd, data);
-		free_cmds(data->cmds);
-		free_env(data->env);
-		close(STDIN_FILENO);
-		close(STDOUT_FILENO);
-		exit(exit_code);
-	}
+		exit_child(data, exec_builtin_in_child(cmd, data));
 	if (!cmd->args || !cmd->args[0])
-	{
-		free_cmds(data->cmds);
-		free_env(data->env);
-		close(STDIN_FILENO);
-		close(STDOUT_FILENO);
-		exit(0);
-	}
+		exit_child(data, 0);
+	if (cmd->args[0][0] == '\0')
+		handle_empty_cmd(data);
 	exec_external(cmd, data);
 }
 

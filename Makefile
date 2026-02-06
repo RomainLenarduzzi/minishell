@@ -26,6 +26,7 @@ SRCS = srcs/main.c \
 		srcs/parsing/free_parsing.c \
 		srcs/execution/execute.c \
 		srcs/execution/execute_utils.c \
+		srcs/execution/execute_error.c \
 		srcs/execution/builtin_check.c \
 		srcs/execution/path.c \
 		srcs/execution/heredoc.c \

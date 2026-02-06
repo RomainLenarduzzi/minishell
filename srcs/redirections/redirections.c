@@ -42,33 +42,41 @@ int	handle_redirections(t_cmd *cmd)
 	return (0);
 }
 
+static int	process_redirection(t_redir *r, int *fd_in, int *fd_out)
+{
+	int	fd;
+	int	*target;
+
+	fd = open_redir_file(r);
+	if (fd < 0)
+	{
+		perror(r->filename);
+		if (*fd_in > 0)
+			close(*fd_in);
+		if (*fd_out > 1)
+			close(*fd_out);
+		return (-1);
+	}
+	target = fd_out;
+	if (r->type == TOKEN_REDIR_IN || r->type == TOKEN_REDIR_HEREDOC)
+		target = fd_in;
+	if (*target > 1)
+		close(*target);
+	*target = fd;
+	return (0);
+}
+
 int	resolve_redirections(t_cmd *cmd, int *fd_in, int *fd_out)
 {
-	int		fd;
 	t_redir	*r;
-	int		*target;
 
 	*fd_in = 0;
 	*fd_out = 1;
 	r = cmd->redirs;
 	while (r)
 	{
-		fd = open_redir_file(r);
-		if (fd < 0)
-		{
-			perror(r->filename);
-			if (*fd_in > 0)
-				close(*fd_in);
-			if (*fd_out > 1)
-				close(*fd_out);
+		if (process_redirection(r, fd_in, fd_out) != 0)
 			return (-1);
-		}
-		target = fd_out;
-		if (r->type == TOKEN_REDIR_IN || r->type == TOKEN_REDIR_HEREDOC)
-			target = fd_in;
-		if (*target > 1)
-			close(*target);
-		*target = fd;
 		r = r->next;
 	}
 	return (0);

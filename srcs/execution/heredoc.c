@@ -24,21 +24,15 @@ static char	*get_filename(void)
 	return (name);
 }
 
-int	handle_heredoc(t_redir *redir, t_data *data)
+static void	read_heredoc_loop(int fd, char *limiter, t_data *data)
 {
 	char	*line;
 	char	*expanded;
-	char	*fname;
-	int		fd;
 
-	fname = get_filename();
-	fd = open(fname, O_WRONLY | O_CREAT | O_TRUNC, 0644);
-	if (fd < 0)
-		return (free(fname), perror("heredoc open"), -1);
 	while (1)
 	{
 		line = readline("> ");
-		if (!line || ft_strcmp(line, redir->filename) == 0)
+		if (!line || ft_strcmp(line, limiter) == 0)
 		{
 			free(line);
 			break ;
@@ -49,6 +43,18 @@ int	handle_heredoc(t_redir *redir, t_data *data)
 		ft_putstr_fd("\n", fd);
 		free(expanded);
 	}
+}
+
+int	handle_heredoc(t_redir *redir, t_data *data)
+{
+	char	*fname;
+	int		fd;
+
+	fname = get_filename();
+	fd = open(fname, O_WRONLY | O_CREAT | O_TRUNC, 0644);
+	if (fd < 0)
+		return (free(fname), perror("heredoc open"), -1);
+	read_heredoc_loop(fd, redir->filename, data);
 	close(fd);
 	(free(redir->filename), redir->filename = fname);
 	return (0);
