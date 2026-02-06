@@ -12,15 +12,6 @@
 
 #include "../../includes/minishell.h"
 
-void	print_exec_error(char *cmd, char *msg)
-{
-	ft_putstr_fd("minishell: ", 2);
-	ft_putstr_fd(cmd, 2);
-	ft_putstr_fd(": ", 2);
-	ft_putstr_fd(msg, 2);
-	ft_putstr_fd("\n", 2);
-}
-
 void	dup_child_fds(int prev_fd, int pipe_fd[2], int has_next)
 {
 	if (prev_fd != -1)
@@ -93,4 +84,13 @@ int	exec_builtin_cmd(t_cmd *cmd, t_data *data)
 	if (f[1] != STDOUT_FILENO)
 		close(f[1]);
 	return (ret);
+}
+
+void	exit_child(t_data *data, int exit_code)
+{
+	free_cmds(data->cmds);
+	free_env(data->env);
+	close(STDIN_FILENO);
+	close(STDOUT_FILENO);
+	exit(exit_code);
 }
