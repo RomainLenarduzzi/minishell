@@ -30,4 +30,5 @@ void	setup_signals(void)
 {
 	signal(SIGINT, handle_sigint);
 	signal(SIGQUIT, handle_sigquit);
+	signal(SIGPIPE, SIG_IGN);
 }

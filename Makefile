@@ -21,6 +21,7 @@ SRCS = srcs/main.c \
 		srcs/main_utils.c \
 		srcs/parsing/tokenizer.c \
 		srcs/parsing/tokenizer_utils.c \
+		srcs/parsing/syntax_check.c \
 		srcs/parsing/parser.c \
 		srcs/parsing/parser_utils.c \
 		srcs/parsing/free_parsing.c \
