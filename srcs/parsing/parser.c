@@ -12,43 +12,60 @@
 
 #include "../../includes/minishell.h"
 
-static void	handle_token_logic(char ***args, int *i, t_token **toks, t_data *d)
+static void	apply_token_expansion(char ***args, int *i, int *cap, char *exp)
+{
+	ensure_args_capacity(args, cap, *i, *i);
+	(*args)[(*i)++] = exp;
+}
+
+static void	handle_token_logic(t_token **tok, t_data *data,
+	char ***args, int *i_cap[2])
 {
 	char	*exp;
+	int		*i;
+	int		*cap;
 
-	exp = expand_token((*toks)->value, d);
+	i = i_cap[0];
+	cap = i_cap[1];
+	exp = expand_token((*tok)->value, data);
 	if (exp && exp[0] != '\0')
 	{
-		if (ft_strchr(exp, '*') && (*toks)->value[0] != '\''
-			&& (*toks)->value[0] != '"')
-			add_glob_matches(args, i, exp);
-		else if (ft_strchr((*toks)->value, '$') && (*toks)->value[0] != '\''
-			&& (*toks)->value[0] != '"')
-			add_split_words(args, i, exp);
+		ensure_args_capacity(args, cap, *i, *i);
+		if (ft_strchr(exp, '*') && (*tok)->value[0] != '\''
+			&& (*tok)->value[0] != '"')
+			add_glob_matches(args, i, cap, exp);
+		else if (ft_strchr((*tok)->value, '$') && (*tok)->value[0] != '\''
+			&& (*tok)->value[0] != '"')
+			add_split_words(args, i, cap, exp);
 		else
-			(*args)[(*i)++] = exp;
+			apply_token_expansion(args, i, cap, exp);
 	}
 	else
 		free(exp);
-	*toks = (*toks)->next;
+	*tok = (*tok)->next;
 }
 
 static char	**get_cmd_args(t_cmd *cmd, t_token **toks, t_data *data)
 {
 	char	**args;
 	int		i;
+	int		capacity;
+	int		*i_cap[2];
 
-	args = malloc(sizeof(char *) * (count_tokens_only(*toks) * 200 + 1));
+	capacity = count_tokens_only(*toks) * 2 + 1;
+	args = malloc(sizeof(char *) * capacity);
 	if (!args)
 		return (NULL);
 	i = 0;
+	i_cap[0] = &i;
+	i_cap[1] = &capacity;
 	while (*toks && (*toks)->type != TOKEN_PIPE)
 	{
 		if ((*toks)->type >= TOKEN_REDIR_IN
 			&& (*toks)->type <= TOKEN_REDIR_HEREDOC)
 			handle_redirection(cmd, toks, data);
 		else
-			handle_token_logic(&args, &i, toks, data);
+			handle_token_logic(toks, data, &args, i_cap);
 	}
 	args[i] = NULL;
 	return (args);

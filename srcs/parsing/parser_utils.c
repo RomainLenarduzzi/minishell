@@ -12,7 +12,32 @@
 
 #include "../../includes/minishell.h"
 
-void	add_glob_matches(char ***args, int *i, char *exp)
+void	ensure_args_capacity(char ***args, int *capacity,
+	int target_count, int current_count)
+{
+	char	**new_args;
+	int		i;
+
+	if (target_count + 1 < *capacity)
+		return ;
+	*capacity *= 2;
+	if (target_count + 1 >= *capacity)
+		*capacity = target_count + 2;
+	new_args = malloc(sizeof(char *) * (*capacity));
+	if (!new_args)
+		return ;
+	i = 0;
+	while (i < current_count)
+	{
+		new_args[i] = (*args)[i];
+		i++;
+	}
+	new_args[i] = NULL;
+	free(*args);
+	*args = new_args;
+}
+
+void	add_glob_matches(char ***args, int *i, int *capacity, char *exp)
 {
 	char	**matches;
 	int		j;
@@ -23,17 +48,15 @@ void	add_glob_matches(char ***args, int *i, char *exp)
 		(*args)[(*i)++] = exp;
 		return ;
 	}
+	ensure_args_capacity(args, capacity, *i + array_len(matches), *i);
 	j = 0;
 	while (matches[j])
-	{
-		(*args)[(*i)++] = matches[j];
-		j++;
-	}
+		(*args)[(*i)++] = matches[j++];
 	free(matches);
 	free(exp);
 }
 
-void	add_split_words(char ***args, int *i, char *exp)
+void	add_split_words(char ***args, int *i, int *capacity, char *exp)
 {
 	char	**words;
 	int		j;
@@ -44,6 +67,7 @@ void	add_split_words(char ***args, int *i, char *exp)
 		(*args)[(*i)++] = exp;
 		return ;
 	}
+	ensure_args_capacity(args, capacity, *i + array_len(words), *i);
 	j = 0;
 	while (words[j])
 	{
