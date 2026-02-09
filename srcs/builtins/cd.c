@@ -19,7 +19,7 @@ int	builtin_cd(char **args, t_data *data)
 	if (args[1] && args[2])
 	{
 		ft_putstr_fd("minishell: cd: too many arguments\n", 2);
-		return (2);
+		return (1);
 	}
 	path = args[1];
 	if (!path)
