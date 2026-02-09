@@ -168,6 +168,7 @@ void				add_token(t_token **tokens, t_token *new_token);
 int					is_separator(char c);
 void				skip_whitespace(char *input, int *i);
 int					handle_redir(char *in, int *i, char **v, t_token_type *t);
+int					validate_syntax(t_token *tokens);
 
 /* Execution Utils */
 void				print_exec_error(char *cmd, char *msg);
@@ -181,8 +182,9 @@ void				dup_child_fds(int prev_fd, int pipe_fd[2], int has_next);
 void				wait_all_children(pid_t last_pid, t_data *data);
 
 /* Parser Utils */
-void				add_glob_matches(char ***args, int *i, char *exp);
-void				add_split_words(char ***args, int *i, char *exp);
+void				add_glob_matches(char ***args, int *i, int *capacity, char *exp);
+void				add_split_words(char ***args, int *i, int *capacity, char *exp);
 int					count_tokens_only(t_token *tokens);
+void				ensure_args_capacity(char ***args, int *capacity, int target_count, int current_count);
 
 #endif

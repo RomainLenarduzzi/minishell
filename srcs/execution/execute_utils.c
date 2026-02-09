@@ -88,8 +88,7 @@ int	exec_builtin_cmd(t_cmd *cmd, t_data *data)
 
 void	exit_child(t_data *data, int exit_code)
 {
-	free_cmds(data->cmds);
-	free_env(data->env);
+	cleanup_data(data);
 	close(STDIN_FILENO);
 	close(STDOUT_FILENO);
 	exit(exit_code);
