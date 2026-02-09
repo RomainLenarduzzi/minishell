@@ -66,16 +66,16 @@ int	validate_syntax(t_token *tokens)
 		if (curr->type == TOKEN_PIPE)
 		{
 			if (check_pipe_errors(curr))
-				return (2);
+				return (1);
 		}
 		else if (curr->type >= TOKEN_REDIR_IN
 			&& curr->type <= TOKEN_REDIR_HEREDOC)
 		{
 			if (check_redir_errors(curr))
-				return (2);
+				return (1);
 		}
 		else if (check_operator_errors(curr))
-			return (2);
+			return (1);
 		curr = curr->next;
 	}
 	return (0);
