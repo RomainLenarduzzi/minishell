@@ -39,7 +39,7 @@ void	process_input(char *input, t_data *data)
 	data->tokens = tokenize(input);
 	if (!data->tokens)
 	{
-		data->exit_status = 1;
+		data->exit_status = 2;
 		return ;
 	}
 	data->cmds = parse_tokens(data->tokens, data);

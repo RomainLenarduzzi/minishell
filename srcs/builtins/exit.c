@@ -63,7 +63,7 @@ int	builtin_exit(char **args, t_data *data)
 		if (args[2])
 		{
 			ft_putstr_fd("minishell: exit: too many arguments\n", 2);
-			return (1);
+			return (2);
 		}
 		exit_code = ft_atoi(args[1]);
 	}

@@ -133,9 +133,12 @@ int					resolve_redirections(t_cmd *cmd, int *fd_in, int *fd_out);
 char				*get_key(char *env_str);
 char				*get_env_value(t_env *env, char *key);
 void				set_env_value(t_env **env, char *key, char *value);
+void				set_env_value_novalue(t_env **env, char *key);
+void				increment_shlvl(t_env **env);
 void				unset_env_value(t_env **env, char *key);
 t_env				*init_env(char **envp);
 void				free_env(t_env *env);
+t_env				*sort_env_list(t_env *env);
 
 /* Signals */
 void				setup_signals(void);
@@ -182,9 +185,12 @@ void				dup_child_fds(int prev_fd, int pipe_fd[2], int has_next);
 void				wait_all_children(pid_t last_pid, t_data *data);
 
 /* Parser Utils */
-void				add_glob_matches(char ***args, int *i, int *capacity, char *exp);
-void				add_split_words(char ***args, int *i, int *capacity, char *exp);
+void				add_glob_matches(char ***args, int *i, int *capacity,
+								char *exp);
+void				add_split_words(char ***args, int *i, int *capacity,
+								char *exp);
 int					count_tokens_only(t_token *tokens);
-void				ensure_args_capacity(char ***args, int *capacity, int target_count, int current_count);
+void				ensure_args_capacity(char ***args, int *capacity,
+								int target_count, int current_count);
 
 #endif

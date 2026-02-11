@@ -37,11 +37,13 @@ SRCS = srcs/main.c \
 		srcs/builtins/cd.c \
 		srcs/builtins/pwd.c \
 		srcs/builtins/export.c \
+		srcs/builtins/export_sort.c \
 		srcs/builtins/unset.c \
 		srcs/builtins/env.c \
 		srcs/builtins/exit.c \
 		srcs/environment/env_init.c \
 		srcs/environment/env_utils.c \
+		srcs/environment/env_utils2.c \
 		srcs/environment/env_free.c \
 		srcs/environment/env_expansion.c \
 		srcs/signals/signals.c \

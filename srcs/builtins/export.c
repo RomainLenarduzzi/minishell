@@ -54,9 +54,13 @@ static int	print_export_error(char *arg, char *key)
 
 static void	print_export_list(t_env *env, int fd)
 {
+	t_env	*sorted;
 	t_env	*curr;
 
-	curr = env;
+	sorted = sort_env_list(env);
+	if (!sorted)
+		return ;
+	curr = sorted;
 	while (curr)
 	{
 		ft_putstr_fd("declare -x ", fd);
@@ -70,6 +74,7 @@ static void	print_export_list(t_env *env, int fd)
 		ft_putstr_fd("\n", fd);
 		curr = curr->next;
 	}
+	free_env(sorted);
 }
 
 int	builtin_export(char **args, t_data *data)
@@ -93,6 +98,8 @@ int	builtin_export(char **args, t_data *data)
 			value = get_val(args[i]);
 			if (key && value)
 				set_env_value(&data->env, key, value);
+			else if (key && !value)
+				set_env_value_novalue(&data->env, key);
 			(free(key), free(value));
 		}
 	}

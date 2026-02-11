@@ -92,5 +92,6 @@ t_env	*init_env(char **envp)
 		add_env_node(&env, new_node);
 		i++;
 	}
+	increment_shlvl(&env);
 	return (env);
 }
